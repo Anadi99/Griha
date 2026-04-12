@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "PlanAura"
+version = "1.0.0"
+id = "artifacts/planaura"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/" ]
+localPort = 21396
+
+[services.development]
+run = "pnpm --filter @workspace/planaura run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/planaura", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/planaura", "run", "serve" ]
+
+[services.env]
+PORT = "21396"
+BASE_PATH = "/"

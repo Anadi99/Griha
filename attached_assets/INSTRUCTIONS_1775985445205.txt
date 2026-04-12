@@ -1,0 +1,18 @@
+You are working on an existing React Native project.
+
+STRICT RULES:
+
+* Do NOT delete working features
+* Do NOT rewrite full project
+* Do step-by-step improvements
+* Preserve canvas logic
+
+PRIORITY ORDER:
+
+1. Refactor structure
+2. Improve DesignScreen UI
+3. Add animations
+4. Improve canvas performance
+
+IMPORTANT:
+Always explain before making major changes.
