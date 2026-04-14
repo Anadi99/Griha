@@ -33,6 +33,8 @@ interface DesignerStore {
   zoom: number;
   panX: number;
   panY: number;
+  history: Room[][];
+  historyIndex: number;
 
   createNewPlan: (name: string) => void;
   loadPlan: (plan: Plan) => void;
@@ -47,9 +49,28 @@ interface DesignerStore {
   setPan: (x: number, y: number) => void;
   calculateTotalArea: () => number;
   calculateDirections: () => void;
+  pushHistory: () => void;
+  undo: () => void;
+  redo: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
 }
 
 const STORAGE_KEY = "planaura_plans";
+const MAX_HISTORY = 50;
+
+function calcDirection(cx: number, cy: number): Room["direction"] {
+  const angle = Math.atan2(cy, cx) * (180 / Math.PI);
+  const a = (angle + 360) % 360;
+  if (a >= 337.5 || a < 22.5) return "E";
+  if (a >= 22.5 && a < 67.5) return "SE";
+  if (a >= 67.5 && a < 112.5) return "S";
+  if (a >= 112.5 && a < 157.5) return "SW";
+  if (a >= 157.5 && a < 202.5) return "W";
+  if (a >= 202.5 && a < 247.5) return "NW";
+  if (a >= 247.5 && a < 292.5) return "N";
+  return "NE";
+}
 
 export const useDesignerStore = create<DesignerStore>((set, get) => ({
   currentPlan: null,
@@ -59,6 +80,47 @@ export const useDesignerStore = create<DesignerStore>((set, get) => ({
   zoom: 1,
   panX: 0,
   panY: 0,
+  history: [],
+  historyIndex: -1,
+
+  pushHistory: () => {
+    const { currentPlan, history, historyIndex } = get();
+    if (!currentPlan) return;
+    const snapshot = JSON.parse(JSON.stringify(currentPlan.rooms)) as Room[];
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(snapshot);
+    if (newHistory.length > MAX_HISTORY) newHistory.shift();
+    set({ history: newHistory, historyIndex: newHistory.length - 1 });
+  },
+
+  undo: () => {
+    const { currentPlan, history, historyIndex } = get();
+    if (!currentPlan || historyIndex <= 0) return;
+    const newIndex = historyIndex - 1;
+    const rooms = JSON.parse(JSON.stringify(history[newIndex])) as Room[];
+    const totalArea = rooms.reduce((s, r) => s + r.area, 0);
+    set({
+      historyIndex: newIndex,
+      currentPlan: { ...currentPlan, rooms, totalArea, updatedAt: new Date().toISOString() },
+      selectedRoomId: null,
+    });
+  },
+
+  redo: () => {
+    const { currentPlan, history, historyIndex } = get();
+    if (!currentPlan || historyIndex >= history.length - 1) return;
+    const newIndex = historyIndex + 1;
+    const rooms = JSON.parse(JSON.stringify(history[newIndex])) as Room[];
+    const totalArea = rooms.reduce((s, r) => s + r.area, 0);
+    set({
+      historyIndex: newIndex,
+      currentPlan: { ...currentPlan, rooms, totalArea, updatedAt: new Date().toISOString() },
+      selectedRoomId: null,
+    });
+  },
+
+  canUndo: () => get().historyIndex > 0,
+  canRedo: () => get().historyIndex < get().history.length - 1,
 
   createNewPlan: (name: string) => {
     const now = new Date().toISOString();
@@ -78,27 +140,28 @@ export const useDesignerStore = create<DesignerStore>((set, get) => ({
       zoom: 1,
       panX: 0,
       panY: 0,
+      history: [[]],
+      historyIndex: 0,
     });
   },
 
   loadPlan: (plan: Plan) => {
+    const rooms = plan.rooms;
     set({
       currentPlan: plan,
       selectedRoomId: null,
       zoom: 1,
       panX: 0,
       panY: 0,
+      history: [JSON.parse(JSON.stringify(rooms))],
+      historyIndex: 0,
     });
   },
 
   savePlan: async () => {
     const { currentPlan, savedPlans } = get();
     if (!currentPlan) return;
-
-    const updated = currentPlan.updatedAt !== new Date().toISOString()
-      ? { ...currentPlan, updatedAt: new Date().toISOString() }
-      : currentPlan;
-
+    const updated = { ...currentPlan, updatedAt: new Date().toISOString() };
     const existing = savedPlans.findIndex((p) => p.id === updated.id);
     let newPlans: Plan[];
     if (existing >= 0) {
@@ -107,7 +170,6 @@ export const useDesignerStore = create<DesignerStore>((set, get) => ({
     } else {
       newPlans = [updated, ...savedPlans];
     }
-
     set({ savedPlans: newPlans, currentPlan: updated });
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newPlans));
   },
@@ -115,10 +177,7 @@ export const useDesignerStore = create<DesignerStore>((set, get) => ({
   loadSavedPlans: async () => {
     try {
       const data = await AsyncStorage.getItem(STORAGE_KEY);
-      if (data) {
-        const plans: Plan[] = JSON.parse(data);
-        set({ savedPlans: plans });
-      }
+      if (data) set({ savedPlans: JSON.parse(data) });
     } catch (_) {}
   },
 
@@ -133,6 +192,7 @@ export const useDesignerStore = create<DesignerStore>((set, get) => ({
   },
 
   addRoom: (room: Omit<Room, "id">) => {
+    get().pushHistory();
     set((state) => {
       if (!state.currentPlan) return state;
       const newRoom: Room = {
@@ -171,6 +231,7 @@ export const useDesignerStore = create<DesignerStore>((set, get) => ({
   },
 
   deleteRoom: (id: string) => {
+    get().pushHistory();
     set((state) => {
       if (!state.currentPlan) return state;
       const updatedRooms = state.currentPlan.rooms.filter((r) => r.id !== id);
@@ -187,17 +248,9 @@ export const useDesignerStore = create<DesignerStore>((set, get) => ({
     });
   },
 
-  selectRoom: (id: string | null) => {
-    set({ selectedRoomId: id });
-  },
-
-  setZoom: (zoom: number) => {
-    set({ zoom: Math.max(0.3, Math.min(4, zoom)) });
-  },
-
-  setPan: (x: number, y: number) => {
-    set({ panX: x, panY: y });
-  },
+  selectRoom: (id: string | null) => set({ selectedRoomId: id }),
+  setZoom: (zoom: number) => set({ zoom: Math.max(0.25, Math.min(5, zoom)) }),
+  setPan: (x: number, y: number) => set({ panX: x, panY: y }),
 
   calculateTotalArea: () => {
     const state = get();
@@ -208,22 +261,10 @@ export const useDesignerStore = create<DesignerStore>((set, get) => ({
   calculateDirections: () => {
     set((state) => {
       if (!state.currentPlan) return state;
-      const updatedRooms = state.currentPlan.rooms.map((room) => {
-        const centerX = room.x + room.width / 2;
-        const centerY = room.y + room.height / 2;
-        const angle = Math.atan2(centerY, centerX) * (180 / Math.PI);
-        const normalizedAngle = (angle + 360) % 360;
-        let direction: Room["direction"] = "N";
-        if (normalizedAngle >= 337.5 || normalizedAngle < 22.5) direction = "E";
-        else if (normalizedAngle >= 22.5 && normalizedAngle < 67.5) direction = "SE";
-        else if (normalizedAngle >= 67.5 && normalizedAngle < 112.5) direction = "S";
-        else if (normalizedAngle >= 112.5 && normalizedAngle < 157.5) direction = "SW";
-        else if (normalizedAngle >= 157.5 && normalizedAngle < 202.5) direction = "W";
-        else if (normalizedAngle >= 202.5 && normalizedAngle < 247.5) direction = "NW";
-        else if (normalizedAngle >= 247.5 && normalizedAngle < 292.5) direction = "N";
-        else if (normalizedAngle >= 292.5 && normalizedAngle < 337.5) direction = "NE";
-        return { ...room, direction };
-      });
+      const updatedRooms = state.currentPlan.rooms.map((room) => ({
+        ...room,
+        direction: calcDirection(room.x + room.width / 2, room.y + room.height / 2),
+      }));
       return {
         currentPlan: {
           ...state.currentPlan,

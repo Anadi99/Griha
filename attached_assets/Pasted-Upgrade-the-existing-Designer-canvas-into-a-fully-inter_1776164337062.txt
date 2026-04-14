@@ -1,0 +1,110 @@
+Upgrade the existing Designer canvas into a fully interactive floor planning canvas.
+
+CURRENT PROBLEM:
+
+* Canvas only places prebuilt assets
+* No custom drawing
+* No resizing freedom
+* No real design capability
+
+GOAL:
+Convert it into a flexible whiteboard-style floor planner.
+
+---
+
+CORE FEATURES TO IMPLEMENT:
+
+1. DRAWING SYSTEM (MAIN FEATURE)
+
+* User can draw rectangular rooms by drag gesture
+* Tap → start point
+* Drag → define width/height
+* Release → create room
+
+2. ROOM EDITING
+
+* Select room
+* Show resize handles (4 corners)
+* Allow:
+
+  * Resize
+  * Move
+  * Rotate (basic)
+
+3. CANVAS CONTROLS
+   Add toolbar with:
+
+* Select tool (default)
+* Draw tool (create rooms)
+* Pan tool (move canvas)
+* Zoom in/out (pinch gesture)
+* Undo / Redo
+* Delete selected object
+
+4. GRID SYSTEM
+
+* Light grid background
+* Snap-to-grid (optional but preferred)
+
+5. MEASUREMENT SYSTEM
+
+* Show dimensions of room (width × height)
+* Basic scale (e.g., 1 grid = 1 ft or meter)
+
+6. LAYERS / OBJECT TYPES
+   Support:
+
+* Walls / partitions
+* Rooms
+* Assets (doors, windows)
+
+7. VIEW MODES (UI ONLY, basic implementation)
+
+* 2D Floor Plan (default)
+* Eye view toggle (hide UI overlays)
+* 3D button (placeholder only, no real 3D yet)
+
+8. EXPORT OPTIONS (basic)
+
+* Save plan (JSON)
+* Export as image (PNG)
+
+---
+
+UI REQUIREMENTS:
+
+* Floating toolbar (left or bottom)
+* Bottom control bar:
+
+  * 2D / 3D toggle
+  * Layers
+  * Energy (Vastu)
+* Clean minimal icons
+* Do NOT clutter UI
+
+---
+
+TECH NOTES:
+
+* Use react-native-gesture-handler
+
+* Use react-native-svg OR react-native-skia for drawing
+
+* Store objects as:
+  { id, type, x, y, width, height, rotation }
+
+* Maintain performance (no lag)
+
+---
+
+IMPORTANT RULES:
+
+* DO NOT remove existing functionality
+* Extend current canvas, don’t replace blindly
+* Build incrementally
+
+---
+
+GOAL:
+
+Make the canvas behave like a simplified CAD/whiteboard tool for floor planning, not just an asset placer.
