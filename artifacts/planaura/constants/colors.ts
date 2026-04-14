@@ -1,101 +1,117 @@
 const colors = {
   light: {
-    text: "#0a0a0a",
+    text: "#09090B",
     tint: "#4F46E5",
 
-    background: "#F8F7FF",
-    foreground: "#0F0E2C",
+    background: "#F5F4FF",
+    foreground: "#09090B",
 
     card: "#FFFFFF",
-    cardForeground: "#0F0E2C",
+    cardForeground: "#09090B",
 
     surface: "#FFFFFF",
-    surfaceForeground: "#0F0E2C",
+    surfaceElevated: "#FAFAFA",
 
     primary: "#4F46E5",
     primaryForeground: "#FFFFFF",
+    primaryMuted: "#EEF2FF",
 
     secondary: "#EEF2FF",
     secondaryForeground: "#4338CA",
 
-    muted: "#9CA3AF",
-    mutedForeground: "#6B7280",
+    muted: "#A1A1AA",
+    mutedForeground: "#71717A",
+    mutedBg: "#F4F4F5",
 
     accent: "#7C3AED",
     accentForeground: "#FFFFFF",
+    accentMuted: "#F5F3FF",
 
     destructive: "#EF4444",
     destructiveForeground: "#FFFFFF",
+    destructiveMuted: "#FEF2F2",
 
     success: "#10B981",
     successForeground: "#FFFFFF",
+    successMuted: "#ECFDF5",
 
     warning: "#F59E0B",
     warningForeground: "#FFFFFF",
+    warningMuted: "#FFFBEB",
 
-    error: "#EF4444",
-    errorForeground: "#FFFFFF",
+    border: "#E4E4E7",
+    borderStrong: "#D4D4D8",
+    input: "#F4F4F5",
 
-    border: "#E5E7EB",
-    input: "#F3F4F6",
+    shadow: "rgba(0,0,0,0.06)",
+    shadowMd: "rgba(0,0,0,0.10)",
 
     bedroom: "#4F46E5",
     kitchen: "#F97316",
-    bathroom: "#10B981",
+    bathroom: "#0EA5E9",
     living_room: "#7C3AED",
-    office: "#0EA5E9",
+    office: "#059669",
     dining_room: "#EC4899",
   },
 
   dark: {
-    text: "#F9FAFB",
+    text: "#FAFAFA",
     tint: "#818CF8",
 
-    background: "#0F0E1A",
-    foreground: "#F9FAFB",
+    background: "#09090B",
+    foreground: "#FAFAFA",
 
-    card: "#1C1B2E",
-    cardForeground: "#F9FAFB",
+    card: "#18181B",
+    cardForeground: "#FAFAFA",
 
-    surface: "#1C1B2E",
-    surfaceForeground: "#F9FAFB",
+    surface: "#18181B",
+    surfaceElevated: "#27272A",
 
     primary: "#818CF8",
-    primaryForeground: "#0F0E1A",
+    primaryForeground: "#09090B",
+    primaryMuted: "#1E1B4B",
 
-    secondary: "#2D2B4E",
+    secondary: "#27272A",
     secondaryForeground: "#818CF8",
 
-    muted: "#6B7280",
-    mutedForeground: "#9CA3AF",
+    muted: "#52525B",
+    mutedForeground: "#A1A1AA",
+    mutedBg: "#27272A",
 
     accent: "#A78BFA",
-    accentForeground: "#0F0E1A",
+    accentForeground: "#09090B",
+    accentMuted: "#2E1065",
 
     destructive: "#EF4444",
     destructiveForeground: "#FFFFFF",
+    destructiveMuted: "#450A0A",
 
     success: "#10B981",
     successForeground: "#FFFFFF",
+    successMuted: "#022C22",
 
     warning: "#F59E0B",
     warningForeground: "#FFFFFF",
+    warningMuted: "#451A03",
 
-    error: "#EF4444",
-    errorForeground: "#FFFFFF",
+    border: "#27272A",
+    borderStrong: "#3F3F46",
+    input: "#27272A",
 
-    border: "#2D2B4E",
-    input: "#2D2B4E",
+    shadow: "rgba(0,0,0,0.4)",
+    shadowMd: "rgba(0,0,0,0.6)",
 
     bedroom: "#818CF8",
     kitchen: "#FB923C",
-    bathroom: "#34D399",
+    bathroom: "#38BDF8",
     living_room: "#A78BFA",
-    office: "#38BDF8",
+    office: "#34D399",
     dining_room: "#F472B6",
   },
 
   radius: 16,
+  radiusSm: 10,
+  radiusXs: 6,
 };
 
 export default colors;
