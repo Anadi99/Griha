@@ -117,6 +117,7 @@ export default function DesignerScreen() {
 
   const [activeTool, setActiveTool] = useState<ActiveTool>("select");
   const [drawRoomType, setDrawRoomType] = useState<Room["type"]>("bedroom");
+  const [showGrid, setShowGrid] = useState(true);
   const [showPanel, setShowPanel] = useState(false);
   const [panelTab, setPanelTab] = useState<PanelTab>("properties");
   const [showRename, setShowRename] = useState(false);
@@ -213,6 +214,7 @@ export default function DesignerScreen() {
         <FloorPlanCanvas
           activeTool={activeTool}
           drawRoomType={drawRoomType}
+          showGrid={showGrid}
           onRoomSelect={handleRoomSelect}
           onRoomDrawn={handleRoomDrawn}
         />
@@ -230,6 +232,9 @@ export default function DesignerScreen() {
           <TDivider />
           {/* Delete */}
           <TBtn icon="trash-2" danger disabled={!hasSelection} onPress={handleDelete} />
+          <TDivider />
+          {/* Grid toggle */}
+          <TBtn icon="grid" active={showGrid} onPress={() => { setShowGrid(!showGrid); Haptics.selectionAsync(); }} />
         </View>
 
         {/* Draw mode: room type strip */}
