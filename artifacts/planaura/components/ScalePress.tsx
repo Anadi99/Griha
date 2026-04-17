@@ -7,15 +7,26 @@ interface ScalePressProps extends PressableProps {
   children: React.ReactNode;
 }
 
-export function ScalePress({ children, style, scale = 0.96, onPress, onPressIn, onPressOut, disabled, ...rest }: ScalePressProps) {
-  const anim = useRef(new Animated.Value(1)).current;
+export function ScalePress({
+  children, style, scale = 0.96,
+  onPress, onPressIn, onPressOut, disabled, ...rest
+}: ScalePressProps) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const opacityAnim = useRef(new Animated.Value(1)).current;
 
   const handleIn = (e: any) => {
-    Animated.spring(anim, { toValue: scale, useNativeDriver: true, tension: 300, friction: 10 }).start();
+    Animated.parallel([
+      Animated.spring(scaleAnim, { toValue: scale, useNativeDriver: true, tension: 300, friction: 10 }),
+      Animated.timing(opacityAnim, { toValue: 0.78, duration: 80, useNativeDriver: true }),
+    ]).start();
     onPressIn?.(e);
   };
+
   const handleOut = (e: any) => {
-    Animated.spring(anim, { toValue: 1, useNativeDriver: true, tension: 300, friction: 10 }).start();
+    Animated.parallel([
+      Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, tension: 300, friction: 10 }),
+      Animated.timing(opacityAnim, { toValue: 1, duration: 140, useNativeDriver: true }),
+    ]).start();
     onPressOut?.(e);
   };
 
@@ -27,7 +38,10 @@ export function ScalePress({ children, style, scale = 0.96, onPress, onPressIn, 
       disabled={disabled}
       {...rest}
     >
-      <Animated.View style={[style, { transform: [{ scale: disabled ? 1 : anim }] }]}>
+      <Animated.View style={[
+        style,
+        { transform: [{ scale: disabled ? 1 : scaleAnim }], opacity: disabled ? 0.45 : opacityAnim },
+      ]}>
         {children}
       </Animated.View>
     </Pressable>

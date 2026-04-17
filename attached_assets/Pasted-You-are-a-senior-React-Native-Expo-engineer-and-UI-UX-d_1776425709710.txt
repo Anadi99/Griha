@@ -1,0 +1,245 @@
+You are a senior React Native (Expo) engineer and UI/UX designer.
+
+You are working on an existing app called PlanAura — a smart floor plan design app with:
+
+* Canvas designer (rooms, walls, layout)
+* Vastu / Energy analysis
+* Cost estimation
+* Marketplace (templates + architects)
+
+The base app is already built.
+
+Your task is NOT to rebuild anything.
+
+Your task is to COMPLETE, FIX, and POLISH the app into a production-ready, premium-quality product.
+
+---
+
+⚠️ IMPORTANT RULES:
+
+* Do NOT rewrite the whole app
+* Do NOT break existing working features
+* Improve incrementally
+* Optimize performance
+* Keep code clean and modular
+
+---
+
+🧱 1. CANVAS SYSTEM (CRITICAL)
+
+Upgrade the canvas to feel like a professional design tool (Figma-like).
+
+INTERACTION:
+
+* Smooth pan with inertia
+* Pinch-to-zoom (mobile)
+* Zoom centered on touch
+* Add zoom level indicator (%)
+
+GRID SYSTEM:
+
+* Show grid overlay
+* Snap objects to grid
+* Toggle grid ON/OFF
+
+OBJECT HANDLING:
+
+* Select object → show bounding box
+* Add resize handles (corners)
+* Add rotation handle
+* Drag to move freely
+
+FEEDBACK:
+
+* Highlight selected object
+* Show live dimensions while resizing (W × H)
+* Show alignment guides when moving
+
+PERFORMANCE:
+
+* Prevent full canvas re-render
+* Only update changed objects
+* Smooth movement (no lag)
+
+---
+
+🧰 2. FLOATING TOOLBAR (UX FIX)
+
+Create a clean floating toolbar.
+
+TOOLS:
+
+* Draw
+* Select
+* Pan
+* Zoom In / Out
+* Undo
+* Redo
+* Delete
+
+UI:
+
+* Floating rounded container (16px radius)
+* Dark translucent background (glass effect)
+* Lucide icons only
+* Active tool highlighted
+* Proper spacing for touch
+
+INTERACTION:
+
+* Tool switching is instant
+* Cursor/behavior changes per tool
+
+---
+
+🎨 3. UI/UX SYSTEM (GLOBAL POLISH)
+
+STYLE:
+
+* Minimal SaaS-style (Apple + Linear inspired)
+* 16px rounded corners
+* Soft shadows
+* 8px spacing grid everywhere
+
+COLORS:
+
+* Primary: Indigo/Violet gradient
+* Background: dark mode optimized
+* Green = success
+* Yellow = warning
+* Red = error
+
+TYPOGRAPHY:
+
+* Clear hierarchy (Title / Subtitle / Body)
+* Improve readability
+* Reduce clutter
+
+ICONS:
+
+* Use Lucide consistently
+* Remove random emojis
+
+LAYOUT:
+
+* Fix spacing and alignment globally
+* Reduce overcrowding
+* Improve visual hierarchy
+
+---
+
+✨ 4. MICRO-INTERACTIONS (PREMIUM FEEL)
+
+Add smooth and subtle animations:
+
+* Button press → scale down slightly
+* Cards → fade + slide up on load
+* Panels → smooth slide animation
+* Selection → glow highlight
+* Add room → pop-in animation
+* Delete room → fade + shrink
+
+Add loading skeletons instead of blank screens
+
+---
+
+🧠 5. VASTU ENERGY UI (CORE FEATURE)
+
+Create a circular energy score meter:
+
+* SVG-based circular progress
+* Score: 0–100
+
+COLORS:
+
+* Red (0–40)
+* Yellow (40–70)
+* Green (70–100)
+
+UI:
+
+* Center: score number
+* Label: "Energy Score"
+
+ANIMATION:
+
+* Animate from 0 → actual score
+
+ADD:
+
+* Sections:
+
+  * Good
+  * Issues
+  * Suggestions
+
+---
+
+💰 6. REAL-TIME COST PANEL
+
+Create a dynamic cost system:
+
+* Updates instantly when layout changes
+
+DISPLAY:
+
+* Total cost at top
+* Breakdown:
+
+  * Structure
+  * Interiors
+  * Electrical
+  * Plumbing
+
+UI:
+
+* Each category → card with progress bar
+* Smooth animation on value change
+
+---
+
+🧭 7. COMPASS SYSTEM (UNIQUE FEATURE)
+
+Add floating compass overlay:
+
+* Fixed at top-right
+* Always visible
+* Rotates with canvas orientation
+* Clearly show North
+
+EXTRA:
+
+* Highlight room direction when selected
+* Sync with Vastu system
+
+---
+
+📊 8. PERFORMANCE OPTIMIZATION
+
+* Avoid unnecessary re-renders
+* Memoize components where needed
+* Optimize canvas drawing logic
+* Keep animations smooth
+
+---
+
+📦 9. FINAL POLISH
+
+* Ensure all screens are consistent
+* Fix spacing issues
+* Remove UI glitches
+* Improve responsiveness
+
+---
+
+🎯 FINAL GOAL:
+
+Transform this app into a premium, production-ready SaaS mobile app that feels like:
+
+* Figma (canvas experience)
+* Linear (UI polish)
+* Notion (simplicity)
+
+The app should feel smooth, modern, and professional — not like a student project.
+
+Focus on quality, usability, and performance.
