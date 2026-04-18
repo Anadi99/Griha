@@ -1,13 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, Text, FlatList, StyleSheet, Platform, Animated } from "react-native";
+import {
+  View, Text, FlatList, StyleSheet, Platform,
+  Animated, useColorScheme, Alert,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
 import {
-  getTopRatedArchitects,
-  getTopRatedContractors,
-  MOCK_MATERIALS,
+  getTopRatedArchitects, getTopRatedContractors, MOCK_MATERIALS,
   Architect, Contractor, Material,
 } from "@/lib/marketplace";
 import { formatCost } from "@/lib/cost-calculator";
@@ -21,7 +24,6 @@ const TABS: Array<{ key: Tab; label: string; icon: "pen-tool" | "tool" | "packag
   { key: "materials",   label: "Materials",   icon: "package" },
 ];
 
-/* ── Skeleton card ─────────────────────────────────── */
 function SkeletonCard() {
   const colors = useColors();
   const shimmer = useRef(new Animated.Value(0)).current;
@@ -41,26 +43,21 @@ function SkeletonCard() {
           <View style={{ height: 10, width: "40%", borderRadius: 5, backgroundColor: colors.mutedBg }} />
         </View>
       </View>
-      <View style={{ flexDirection: "row", gap: 8 }}>
-        <View style={{ height: 26, width: 70, borderRadius: 8, backgroundColor: colors.mutedBg }} />
-        <View style={{ height: 26, width: 60, borderRadius: 8, backgroundColor: colors.mutedBg }} />
-      </View>
       <View style={{ height: 42, borderRadius: 12, backgroundColor: colors.mutedBg }} />
     </Animated.View>
   );
 }
 
-/* ── Animated card wrapper ─────────────────────────── */
 function AnimCard({ children, index }: { children: React.ReactNode; index: number }) {
   const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.spring(anim, { toValue: 1, tension: 100, friction: 12, delay: index * 60, useNativeDriver: true }).start();
+    Animated.spring(anim, { toValue: 1, tension: 100, friction: 12, delay: index * 55, useNativeDriver: true }).start();
   }, []);
   return (
     <Animated.View style={{
       opacity: anim,
       transform: [
-        { translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) },
+        { translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) },
         { scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) },
       ],
     }}>
@@ -69,18 +66,17 @@ function AnimCard({ children, index }: { children: React.ReactNode; index: numbe
   );
 }
 
-/* ── Primitives ────────────────────────────────────── */
 function StarRating({ rating }: { rating: number }) {
   const colors = useColors();
   return (
     <View style={styles.starRow}>
-      <Feather name="star" size={11} color="#F59E0B" />
+      <Feather name="star" size={11} color="#D97706" />
       <Text style={[styles.starText, { color: colors.foreground }]}>{rating.toFixed(1)}</Text>
     </View>
   );
 }
 
-function InitialsAvatar({ initials, color }: { initials: string; color: string }) {
+function Avatar({ initials, color }: { initials: string; color: string }) {
   return (
     <View style={[styles.avatar, { backgroundColor: color + "18" }]}>
       <Text style={[styles.avatarText, { color }]}>{initials}</Text>
@@ -96,13 +92,25 @@ function Chip({ text, color, bg }: { text: string; color: string; bg: string }) 
   );
 }
 
-/* ── Main screen ───────────────────────────────────── */
+function ComingSoonBanner() {
+  const colors = useColors();
+  return (
+    <View style={[styles.comingSoon, { backgroundColor: colors.primaryMuted, borderColor: colors.primary + "25" }]}>
+      <Feather name="zap" size={13} color={colors.primary} />
+      <Text style={[styles.comingSoonText, { color: colors.primary }]}>
+        <Text style={{ fontWeight: "800" }}>v2 feature:</Text> Direct contact, quotes & purchases coming soon.
+      </Text>
+    </View>
+  );
+}
+
 export default function MarketplaceScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const isDark = useColorScheme() === "dark";
+  const isIOS = Platform.OS === "ios";
   const [activeTab, setActiveTab] = useState<Tab>("architects");
   const [loading, setLoading] = useState(false);
-  const prevTab = useRef<Tab>("architects");
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom;
@@ -114,19 +122,22 @@ export default function MarketplaceScreen() {
     if (tab === activeTab) return;
     setLoading(true);
     Haptics.selectionAsync();
-    // Simulate brief load for animation
-    setTimeout(() => { setActiveTab(tab); setLoading(false); }, 120);
+    setTimeout(() => { setActiveTab(tab); setLoading(false); }, 100);
+  };
+
+  const handleContact = () => {
+    Alert.alert("Coming in v2", "Direct contact and quote requests will be available in the next version.", [{ text: "Got it" }]);
   };
 
   const renderArchitect = ({ item, index }: { item: Architect; index: number }) => (
     <AnimCard index={index}>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.cardHead}>
-          <InitialsAvatar initials={item.avatar} color={colors.primary} />
+          <Avatar initials={item.avatar} color={colors.primary} />
           <View style={{ flex: 1 }}>
             <View style={styles.nameRow}>
               <Text style={[styles.name, { color: colors.foreground }]}>{item.name}</Text>
-              {item.verified && <Feather name="check-circle" size={13} color="#3B82F6" />}
+              {item.verified && <Feather name="check-circle" size={13} color="#2563EB" />}
             </View>
             <Text style={[styles.sub, { color: colors.mutedForeground }]}>{item.specialization.join(" · ")}</Text>
           </View>
@@ -137,10 +148,12 @@ export default function MarketplaceScreen() {
           <Chip text={item.location} color={colors.mutedForeground} bg={colors.mutedBg} />
           <Chip text={`₹${item.hourlyRate.toLocaleString("en-IN")}/hr`} color={colors.primary} bg={colors.primaryMuted} />
         </View>
-        <ScalePress onPress={() => Haptics.selectionAsync()}
-          style={[styles.actionBtn, { backgroundColor: colors.primary }]}>
-          <Feather name="message-square" size={14} color="#fff" />
-          <Text style={styles.actionBtnText}>Contact</Text>
+        <ScalePress onPress={handleContact} scale={0.97}>
+          <LinearGradient colors={[colors.primary, colors.primaryDark]}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.actionBtn}>
+            <Feather name="message-square" size={14} color="#fff" />
+            <Text style={styles.actionBtnText}>Contact</Text>
+          </LinearGradient>
         </ScalePress>
       </View>
     </AnimCard>
@@ -150,13 +163,13 @@ export default function MarketplaceScreen() {
     <AnimCard index={index}>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.cardHead}>
-          <View style={[styles.iconBox, { backgroundColor: colors.accentMuted }]}>
-            <Feather name="tool" size={20} color={colors.accent} />
+          <View style={[styles.iconBox, { backgroundColor: "#7C3AED18" }]}>
+            <Feather name="tool" size={20} color="#7C3AED" />
           </View>
           <View style={{ flex: 1 }}>
             <View style={styles.nameRow}>
               <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1}>{item.name}</Text>
-              {item.verified && <Feather name="check-circle" size={13} color="#3B82F6" />}
+              {item.verified && <Feather name="check-circle" size={13} color="#2563EB" />}
             </View>
             <Text style={[styles.sub, { color: colors.mutedForeground }]}>{item.specialization.join(" · ")}</Text>
           </View>
@@ -165,12 +178,14 @@ export default function MarketplaceScreen() {
         <View style={styles.chipsRow}>
           <Chip text={`${item.completedProjects} projects`} color={colors.mutedForeground} bg={colors.mutedBg} />
           <Chip text={item.location} color={colors.mutedForeground} bg={colors.mutedBg} />
-          <Chip text={formatCost(item.averageProjectCost)} color={colors.accent} bg={colors.accentMuted} />
+          <Chip text={formatCost(item.averageProjectCost)} color="#7C3AED" bg="#7C3AED15" />
         </View>
-        <ScalePress onPress={() => Haptics.selectionAsync()}
-          style={[styles.actionBtn, { backgroundColor: colors.accent }]}>
-          <Feather name="send" size={14} color="#fff" />
-          <Text style={styles.actionBtnText}>Get Quote</Text>
+        <ScalePress onPress={handleContact} scale={0.97}>
+          <LinearGradient colors={["#7C3AED", "#6D28D9"]}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.actionBtn}>
+            <Feather name="send" size={14} color="#fff" />
+            <Text style={styles.actionBtnText}>Get Quote</Text>
+          </LinearGradient>
         </ScalePress>
       </View>
     </AnimCard>
@@ -180,8 +195,8 @@ export default function MarketplaceScreen() {
     <AnimCard index={index}>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.cardHead}>
-          <View style={[styles.iconBox, { backgroundColor: colors.successMuted }]}>
-            <Feather name="package" size={20} color={colors.success} />
+          <View style={[styles.iconBox, { backgroundColor: "#05966918" }]}>
+            <Feather name="package" size={20} color="#059669" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.name, { color: colors.foreground }]}>{item.name}</Text>
@@ -193,18 +208,17 @@ export default function MarketplaceScreen() {
         <View style={styles.chipsRow}>
           <Chip
             text={item.inStock ? "In Stock" : "Out of Stock"}
-            color={item.inStock ? colors.success : colors.destructive}
-            bg={item.inStock ? colors.successMuted : colors.destructiveMuted}
+            color={item.inStock ? "#059669" : colors.destructive}
+            bg={item.inStock ? "#05966915" : colors.destructiveMuted}
           />
-          <Chip
-            text={`₹${item.pricePerUnit.toLocaleString("en-IN")}/${item.unit}`}
-            color={colors.success} bg={colors.successMuted}
-          />
+          <Chip text={`₹${item.pricePerUnit.toLocaleString("en-IN")}/${item.unit}`} color="#059669" bg="#05966915" />
         </View>
-        <ScalePress onPress={() => Haptics.selectionAsync()}
-          style={[styles.actionBtn, { backgroundColor: colors.success }]}>
-          <Feather name="shopping-cart" size={14} color="#fff" />
-          <Text style={styles.actionBtnText}>Add to Quote</Text>
+        <ScalePress onPress={handleContact} scale={0.97}>
+          <LinearGradient colors={["#059669", "#047857"]}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.actionBtn}>
+            <Feather name="shopping-cart" size={14} color="#fff" />
+            <Text style={styles.actionBtnText}>Add to Quote</Text>
+          </LinearGradient>
         </ScalePress>
       </View>
     </AnimCard>
@@ -213,25 +227,27 @@ export default function MarketplaceScreen() {
   const data: any[] = activeTab === "architects" ? architects
     : activeTab === "contractors" ? contractors : MOCK_MATERIALS;
 
-  const skeletons = [0, 1, 2];
-
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border, paddingTop: topPad + 8 }]}>
-        <Text style={[styles.headerTitle, { color: colors.foreground }]}>Marketplace</Text>
-        <Text style={[styles.headerSub, { color: colors.mutedForeground }]}>Connect with professionals & suppliers</Text>
+      <View style={[styles.header, { paddingTop: topPad + 8 },
+        isIOS ? {} : { backgroundColor: colors.card, borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth }]}>
+        {isIOS && <BlurView intensity={80} tint={isDark ? "dark" : "extraLight"} style={StyleSheet.absoluteFill} />}
+        <View style={styles.headerInner}>
+          <Text style={[styles.headerTitle, { color: colors.foreground }]}>Explore</Text>
+          <Text style={[styles.headerSub, { color: colors.mutedForeground }]}>Professionals & suppliers</Text>
+        </View>
       </View>
 
-      {/* Pill tab bar */}
-      <View style={[styles.tabBarWrapper, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+      {/* Tab bar */}
+      <View style={[styles.tabBarWrapper, { backgroundColor: colors.card, borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth }]}>
         <View style={[styles.tabBar, { backgroundColor: colors.mutedBg }]}>
           {TABS.map((tab) => {
             const isActive = activeTab === tab.key;
             return (
               <ScalePress key={tab.key} onPress={() => switchTab(tab.key)} scale={0.95}
                 style={[styles.tabPill, isActive && [styles.tabPillActive, { backgroundColor: colors.card }]]}>
-                <Feather name={tab.icon} size={14} color={isActive ? colors.primary : colors.mutedForeground} />
+                <Feather name={tab.icon} size={13} color={isActive ? colors.primary : colors.mutedForeground} />
                 <Text style={[styles.tabLabel, { color: isActive ? colors.primary : colors.mutedForeground }]}>
                   {tab.label}
                 </Text>
@@ -243,12 +259,13 @@ export default function MarketplaceScreen() {
 
       {loading ? (
         <View style={[styles.list, { gap: 12 }]}>
-          {skeletons.map((i) => <SkeletonCard key={i} />)}
+          {[0, 1, 2].map((i) => <SkeletonCard key={i} />)}
         </View>
       ) : (
         <FlatList
           data={data}
           keyExtractor={(item) => item.id}
+          ListHeaderComponent={<ComingSoonBanner />}
           renderItem={
             activeTab === "architects" ? renderArchitect as any
             : activeTab === "contractors" ? renderContractor as any
@@ -264,20 +281,36 @@ export default function MarketplaceScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-
-  header: { paddingHorizontal: 20, paddingBottom: 14, borderBottomWidth: 1 },
-  headerTitle: { fontSize: 26, fontWeight: "800", letterSpacing: -0.5 },
+  header: { overflow: "hidden", borderBottomWidth: StyleSheet.hairlineWidth },
+  headerInner: { paddingHorizontal: 20, paddingBottom: 14 },
+  headerTitle: { fontSize: 28, fontWeight: "800", letterSpacing: -0.6 },
   headerSub: { fontSize: 13, marginTop: 2 },
 
-  tabBarWrapper: { paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1 },
+  tabBarWrapper: { paddingHorizontal: 16, paddingVertical: 10 },
   tabBar: { flexDirection: "row", borderRadius: 12, padding: 3, gap: 2 },
-  tabPill: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 9, borderRadius: 10 },
-  tabPillActive: { shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
-  tabLabel: { fontSize: 13, fontWeight: "600" },
+  tabPill: {
+    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 5, paddingVertical: 9, borderRadius: 10,
+  },
+  tabPillActive: {
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
+  },
+  tabLabel: { fontSize: 12, fontWeight: "600" },
 
   list: { padding: 16, gap: 12 },
 
-  card: { borderRadius: 16, borderWidth: 1, padding: 16, gap: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  comingSoon: {
+    flexDirection: "row", alignItems: "flex-start", gap: 8,
+    padding: 12, borderRadius: 14, borderWidth: 1, marginBottom: 4,
+  },
+  comingSoonText: { flex: 1, fontSize: 13, lineHeight: 19 },
+
+  card: {
+    borderRadius: 18, borderWidth: StyleSheet.hairlineWidth, padding: 16, gap: 12,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+  },
   cardHead: { flexDirection: "row", alignItems: "center", gap: 12 },
   avatar: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center" },
   avatarText: { fontSize: 15, fontWeight: "800" },
@@ -294,6 +327,11 @@ const styles = StyleSheet.create({
   chip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
   chipText: { fontSize: 12, fontWeight: "600" },
 
-  actionBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 11, borderRadius: 12 },
+  actionBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 8, paddingVertical: 14, borderRadius: 16,
+    shadowColor: "#E02020", shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2, shadowRadius: 8, elevation: 4,
+  },
   actionBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" },
 });

@@ -6,12 +6,12 @@ import { useColors } from "@/hooks/useColors";
 import { ScalePress } from "@/components/ScalePress";
 
 const ROOM_TYPES: Array<{ type: Room["type"]; label: string; icon: string; color: string }> = [
-  { type: "bedroom", label: "Bedroom", icon: "moon", color: "#4F46E5" },
-  { type: "living_room", label: "Living", icon: "tv", color: "#7C3AED" },
-  { type: "kitchen", label: "Kitchen", icon: "coffee", color: "#F97316" },
-  { type: "bathroom", label: "Bath", icon: "droplet", color: "#0EA5E9" },
-  { type: "office", label: "Office", icon: "briefcase", color: "#059669" },
-  { type: "dining_room", label: "Dining", icon: "users", color: "#EC4899" },
+  { type: "bedroom",     label: "Bedroom", icon: "moon",      color: "#E02020" },
+  { type: "living_room", label: "Living",  icon: "tv",        color: "#7C3AED" },
+  { type: "kitchen",     label: "Kitchen", icon: "coffee",    color: "#EA580C" },
+  { type: "bathroom",    label: "Bath",    icon: "droplet",   color: "#0284C7" },
+  { type: "office",      label: "Office",  icon: "briefcase", color: "#059669" },
+  { type: "dining_room", label: "Dining",  icon: "users",     color: "#DB2777" },
 ];
 
 interface Props { onClose?: () => void; }
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
 
   deleteBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
-    borderRadius: 12, paddingVertical: 12, borderWidth: 1,
+    borderRadius: 16, paddingVertical: 14, borderWidth: 1,
   },
   deleteBtnText: { fontSize: 14, fontWeight: "700" },
 });

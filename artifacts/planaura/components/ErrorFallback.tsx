@@ -28,8 +28,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
   const handleRestart = async () => {
     try {
       await reloadAppAsync();
-    } catch (restartError) {
-      console.error("Failed to restart app:", restartError);
+    } catch {
       resetError();
     }
   };
@@ -203,7 +202,7 @@ const styles = StyleSheet.create({
     right: 16,
     width: 44,
     height: 44,
-    borderRadius: 8,
+    borderRadius: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -211,14 +210,11 @@ const styles = StyleSheet.create({
   },
   button: {
     paddingVertical: 16,
-    borderRadius: 8,
+    borderRadius: 16,
     paddingHorizontal: 24,
     minWidth: 200,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,

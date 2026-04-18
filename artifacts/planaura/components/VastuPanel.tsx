@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   scoreLabel: { fontSize: 12 },
 
   statsRow: { flexDirection: "row", gap: 10, marginTop: 10 },
-  statBadge: { flex: 1, alignItems: "center", paddingVertical: 10, borderRadius: 12, gap: 2 },
+  statBadge: { flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 16, gap: 2 },
   statBadgeNum: { fontSize: 20, fontWeight: "800" },
   statBadgeLabel: { fontSize: 10, fontWeight: "700", opacity: 0.8 },
 
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   sectionDot: { width: 8, height: 8, borderRadius: 4 },
   sectionTitle: { fontSize: 14, fontWeight: "700", letterSpacing: -0.2 },
 
-  item: { flexDirection: "row", alignItems: "flex-start", gap: 10, padding: 12, borderRadius: 12 },
+  item: { flexDirection: "row", alignItems: "flex-start", gap: 10, padding: 14, borderRadius: 16 },
   itemIcon: { width: 26, height: 26, borderRadius: 8, alignItems: "center", justifyContent: "center", marginTop: 1 },
   itemText: { fontSize: 13, lineHeight: 18, flex: 1 },
   itemMeta: { fontSize: 11, marginTop: 3, textTransform: "capitalize", fontWeight: "600" },

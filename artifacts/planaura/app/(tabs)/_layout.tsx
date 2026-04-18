@@ -1,36 +1,11 @@
 import { BlurView } from "expo-blur";
-import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
-import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
-import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 import { useColors } from "@/hooks/useColors";
 
-function NativeTabLayout() {
-  return (
-    <NativeTabs>
-      <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>Home</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="designer">
-        <Icon sf={{ default: "pencil", selected: "pencil.fill" }} />
-        <Label>Designer</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="plans">
-        <Icon sf={{ default: "folder", selected: "folder.fill" }} />
-        <Label>Plans</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="marketplace">
-        <Icon sf={{ default: "bag", selected: "bag.fill" }} />
-        <Label>Marketplace</Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
-  );
-}
-
-function ClassicTabLayout() {
+export default function TabLayout() {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -46,22 +21,30 @@ function ClassicTabLayout() {
         tabBarStyle: {
           position: "absolute",
           backgroundColor: isIOS ? "transparent" : colors.card,
-          borderTopWidth: 1,
+          borderTopWidth: StyleSheet.hairlineWidth,
           borderTopColor: colors.border,
           elevation: 0,
-          height: isWeb ? 84 : 60,
+          height: isWeb ? 84 : isIOS ? 82 : 64,
+          paddingBottom: isIOS ? 24 : 8,
+          paddingTop: 8,
         },
         tabBarBackground: () =>
           isIOS ? (
             <BlurView
-              intensity={90}
-              tint={isDark ? "dark" : "light"}
-              style={StyleSheet.absoluteFill}
+              intensity={80}
+              tint={isDark ? "dark" : "extraLight"}
+              style={[StyleSheet.absoluteFill, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border }]}
             />
           ) : isWeb ? (
             <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.card }]} />
           ) : null,
-        tabBarLabelStyle: { fontSize: 10, fontWeight: "600" as const, marginBottom: 4 },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: "600",
+          fontFamily: "Inter_600SemiBold",
+          marginBottom: 2,
+        },
+        tabBarIconStyle: { marginTop: 2 },
       }}
     >
       <Tabs.Screen
@@ -69,7 +52,7 @@ function ClassicTabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, focused }) => (
-            <Feather name={focused ? "home" : "home"} size={22} color={color} />
+            <Feather name={focused ? "home" : "home"} size={21} color={color} />
           ),
         }}
       />
@@ -78,7 +61,7 @@ function ClassicTabLayout() {
         options={{
           title: "Designer",
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="floor-plan" size={22} color={color} />
+            <MaterialCommunityIcons name="floor-plan" size={21} color={color} />
           ),
         }}
       />
@@ -87,26 +70,19 @@ function ClassicTabLayout() {
         options={{
           title: "Plans",
           tabBarIcon: ({ color }) => (
-            <Feather name="folder" size={22} color={color} />
+            <Feather name="folder" size={21} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="marketplace"
         options={{
-          title: "Marketplace",
+          title: "Explore",
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="store-outline" size={22} color={color} />
+            <Feather name="compass" size={21} color={color} />
           ),
         }}
       />
     </Tabs>
   );
-}
-
-export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
-  }
-  return <ClassicTabLayout />;
 }

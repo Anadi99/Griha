@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, Text, ScrollView, StyleSheet, Animated } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { View, Text, ScrollView, StyleSheet, Animated } from "react-native";import { Feather } from "@expo/vector-icons";
 import { useDesignerStore } from "@/lib/store";
 import { useColors } from "@/hooks/useColors";
 import { calculateCostEstimate, formatCost, getCostTierLabel, getCostTierDescription } from "@/lib/cost-calculator";
@@ -9,18 +8,18 @@ import { ScalePress } from "@/components/ScalePress";
 const TIERS: Array<"basic" | "standard" | "premium"> = ["basic", "standard", "premium"];
 
 const TIER_META: Record<string, { icon: string; color: string }> = {
-  basic:    { icon: "home",  color: "#64748B" },
-  standard: { icon: "home",  color: "#4F46E5" },
-  premium:  { icon: "star",  color: "#F59E0B" },
+  basic:    { icon: "home", color: "#737373" },
+  standard: { icon: "home", color: "#E02020" },
+  premium:  { icon: "star", color: "#D97706" },
 };
 
 const BREAKDOWN_CONFIG = [
-  { key: "structure",  label: "Structure",  pct: 50, icon: "layers"     as const },
-  { key: "interiors",  label: "Interiors",  pct: 20, icon: "grid"       as const },
-  { key: "electrical", label: "Electrical", pct: 15, icon: "zap"        as const },
-  { key: "plumbing",   label: "Plumbing",   pct: 15, icon: "droplet"    as const },
+  { key: "structure",  label: "Structure",  pct: 50, icon: "layers"  as const },
+  { key: "interiors",  label: "Interiors",  pct: 20, icon: "grid"    as const },
+  { key: "electrical", label: "Electrical", pct: 15, icon: "zap"     as const },
+  { key: "plumbing",   label: "Plumbing",   pct: 15, icon: "droplet" as const },
 ];
-const BREAKDOWN_COLORS = ["#4F46E5", "#7C3AED", "#F59E0B", "#0EA5E9"];
+const BREAKDOWN_COLORS = ["#E02020", "#7C3AED", "#D97706", "#0284C7"];
 
 /* ── Animated progress bar ─────────────────────────── */
 function AnimBar({ pct, color, value }: { pct: number; color: string; value: number }) {
@@ -204,7 +203,7 @@ const styles = StyleSheet.create({
 
   sectionTitle: { fontSize: 14, fontWeight: "700", letterSpacing: -0.2 },
 
-  bCard: { borderRadius: 14, borderWidth: 1, padding: 12, gap: 8 },
+  bCard: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: 14, gap: 8 },
   bHead: { flexDirection: "row", alignItems: "center", gap: 10 },
   bIcon: { width: 30, height: 30, borderRadius: 9, alignItems: "center", justifyContent: "center" },
   bLabel: { flex: 1, fontSize: 13, fontWeight: "600" },

@@ -1,3 +1,7 @@
+/**
+ * ScalePress — Phase 4 upgrade
+ * Tighter spring, faster opacity, satisfying press feel
+ */
 import React, { useRef } from "react";
 import { Animated, Pressable, PressableProps, StyleProp, ViewStyle } from "react-native";
 
@@ -16,16 +20,34 @@ export function ScalePress({
 
   const handleIn = (e: any) => {
     Animated.parallel([
-      Animated.spring(scaleAnim, { toValue: scale, useNativeDriver: true, tension: 300, friction: 10 }),
-      Animated.timing(opacityAnim, { toValue: 0.78, duration: 80, useNativeDriver: true }),
+      Animated.spring(scaleAnim, {
+        toValue: scale,
+        useNativeDriver: true,
+        tension: 400,   // snappier
+        friction: 12,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 0.72,
+        duration: 60,   // faster dim
+        useNativeDriver: true,
+      }),
     ]).start();
     onPressIn?.(e);
   };
 
   const handleOut = (e: any) => {
     Animated.parallel([
-      Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, tension: 300, friction: 10 }),
-      Animated.timing(opacityAnim, { toValue: 1, duration: 140, useNativeDriver: true }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 400,
+        friction: 12,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 120,
+        useNativeDriver: true,
+      }),
     ]).start();
     onPressOut?.(e);
   };
@@ -38,10 +60,15 @@ export function ScalePress({
       disabled={disabled}
       {...rest}
     >
-      <Animated.View style={[
-        style,
-        { transform: [{ scale: disabled ? 1 : scaleAnim }], opacity: disabled ? 0.45 : opacityAnim },
-      ]}>
+      <Animated.View
+        style={[
+          style,
+          {
+            transform: [{ scale: disabled ? 1 : scaleAnim }],
+            opacity: disabled ? 0.4 : opacityAnim,
+          },
+        ]}
+      >
         {children}
       </Animated.View>
     </Pressable>
