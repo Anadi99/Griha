@@ -83,6 +83,42 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="scan"
+        options={{
+          title: "Scan",
+          tabBarIcon: ({ color }) => (
+            <Feather name="camera" size={21} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="insights"
+        options={{
+          title: "Insights",
+          tabBarIcon: ({ color }) => (
+            <Feather name="bar-chart-2" size={21} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="generate"
+        options={{
+          title: "Generate",
+          tabBarIcon: ({ color }) => (
+            <Feather name="cpu" size={21} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="compare"
+        options={{
+          title: "Compare",
+          tabBarIcon: ({ color }) => (
+            <Feather name="columns" size={21} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

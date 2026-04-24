@@ -13,14 +13,26 @@ export interface Room {
   label?: string;
 }
 
+export interface Opening {
+  id: string;
+  roomId: string;
+  wall: "N" | "S" | "E" | "W";
+  type: "door" | "window";
+  offset: number;
+}
+
 export interface Plan {
   id: string;
   name: string;
   rooms: Room[];
+  openings: Opening[];
   totalArea: number;
   vastuScore: number;
+  sunlightScore: number;
+  ventilationScore: number;
   costEstimate: number;
   costTier: "basic" | "standard" | "premium";
+  locationCity: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -45,6 +57,9 @@ interface DesignerStore {
   updateRoom: (id: string, updates: Partial<Room>) => void;
   deleteRoom: (id: string) => void;
   selectRoom: (id: string | null) => void;
+  addOpening: (opening: Omit<Opening, "id">) => void;
+  removeOpening: (id: string) => void;
+  setLocationCity: (city: string) => void;
   setZoom: (zoom: number) => void;
   setPan: (x: number, y: number) => void;
   calculateTotalArea: () => number;
@@ -129,10 +144,14 @@ export const useDesignerStore = create<DesignerStore>((set, get) => ({
         id: `plan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name,
         rooms: [],
+        openings: [],
         totalArea: 0,
         vastuScore: 0,
+        sunlightScore: 0,
+        ventilationScore: 0,
         costEstimate: 0,
         costTier: "standard",
+        locationCity: "Mumbai",
         createdAt: now,
         updatedAt: now,
       },
@@ -146,14 +165,16 @@ export const useDesignerStore = create<DesignerStore>((set, get) => ({
   },
 
   loadPlan: (plan: Plan) => {
-    const rooms = plan.rooms;
     set({
-      currentPlan: plan,
-      selectedRoomId: null,
-      zoom: 1,
-      panX: 0,
-      panY: 0,
-      history: [JSON.parse(JSON.stringify(rooms))],
+      currentPlan: {
+        ...plan,
+        openings: plan.openings ?? [],
+        sunlightScore: plan.sunlightScore ?? 0,
+        ventilationScore: plan.ventilationScore ?? 0,
+        locationCity: plan.locationCity ?? "Mumbai",
+      },
+      selectedRoomId: null, zoom: 1, panX: 0, panY: 0,
+      history: [JSON.parse(JSON.stringify(plan.rooms))],
       historyIndex: 0,
     });
   },
@@ -251,6 +272,28 @@ export const useDesignerStore = create<DesignerStore>((set, get) => ({
   selectRoom: (id: string | null) => set({ selectedRoomId: id }),
   setZoom: (zoom: number) => set({ zoom: Math.max(0.25, Math.min(5, zoom)) }),
   setPan: (x: number, y: number) => set({ panX: x, panY: y }),
+
+  addOpening: (opening: Omit<Opening, "id">) => {
+    set((state) => {
+      if (!state.currentPlan) return state;
+      const o: Opening = { ...opening, id: `op_${Date.now()}_${Math.random().toString(36).substr(2, 6)}` };
+      return { currentPlan: { ...state.currentPlan, openings: [...state.currentPlan.openings, o], updatedAt: new Date().toISOString() } };
+    });
+  },
+
+  removeOpening: (id: string) => {
+    set((state) => {
+      if (!state.currentPlan) return state;
+      return { currentPlan: { ...state.currentPlan, openings: state.currentPlan.openings.filter(o => o.id !== id), updatedAt: new Date().toISOString() } };
+    });
+  },
+
+  setLocationCity: (city: string) => {
+    set((state) => {
+      if (!state.currentPlan) return state;
+      return { currentPlan: { ...state.currentPlan, locationCity: city } };
+    });
+  },
 
   calculateTotalArea: () => {
     const state = get();
