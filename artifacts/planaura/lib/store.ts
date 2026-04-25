@@ -13,6 +13,14 @@ export interface Room {
   label?: string;
 }
 
+export interface SketchStroke {
+  id: string;
+  points: Array<{ x: number; y: number }>; // grid coordinates
+  color: string;
+  width: number;
+  type: "freehand" | "line";
+}
+
 export interface Opening {
   id: string;
   roomId: string;
@@ -26,6 +34,7 @@ export interface Plan {
   name: string;
   rooms: Room[];
   openings: Opening[];
+  sketches: SketchStroke[];
   totalArea: number;
   vastuScore: number;
   sunlightScore: number;
@@ -59,6 +68,8 @@ interface DesignerStore {
   selectRoom: (id: string | null) => void;
   addOpening: (opening: Omit<Opening, "id">) => void;
   removeOpening: (id: string) => void;
+  addSketch: (stroke: Omit<SketchStroke, "id">) => void;
+  clearSketches: () => void;
   setLocationCity: (city: string) => void;
   setZoom: (zoom: number) => void;
   setPan: (x: number, y: number) => void;
@@ -145,6 +156,7 @@ export const useDesignerStore = create<DesignerStore>((set, get) => ({
         name,
         rooms: [],
         openings: [],
+        sketches: [],
         totalArea: 0,
         vastuScore: 0,
         sunlightScore: 0,
@@ -169,6 +181,7 @@ export const useDesignerStore = create<DesignerStore>((set, get) => ({
       currentPlan: {
         ...plan,
         openings: plan.openings ?? [],
+        sketches: plan.sketches ?? [],
         sunlightScore: plan.sunlightScore ?? 0,
         ventilationScore: plan.ventilationScore ?? 0,
         locationCity: plan.locationCity ?? "Mumbai",
@@ -285,6 +298,21 @@ export const useDesignerStore = create<DesignerStore>((set, get) => ({
     set((state) => {
       if (!state.currentPlan) return state;
       return { currentPlan: { ...state.currentPlan, openings: state.currentPlan.openings.filter(o => o.id !== id), updatedAt: new Date().toISOString() } };
+    });
+  },
+
+  addSketch: (stroke: Omit<SketchStroke, "id">) => {
+    set((state) => {
+      if (!state.currentPlan) return state;
+      const s: SketchStroke = { ...stroke, id: `sk_${Date.now()}_${Math.random().toString(36).substr(2, 6)}` };
+      return { currentPlan: { ...state.currentPlan, sketches: [...(state.currentPlan.sketches ?? []), s], updatedAt: new Date().toISOString() } };
+    });
+  },
+
+  clearSketches: () => {
+    set((state) => {
+      if (!state.currentPlan) return state;
+      return { currentPlan: { ...state.currentPlan, sketches: [], updatedAt: new Date().toISOString() } };
     });
   },
 

@@ -6,7 +6,7 @@
 import React, { useRef, useState, useCallback, useEffect, memo } from "react";
 import { View, PanResponder, StyleSheet, Animated, useColorScheme } from "react-native";
 import Svg, { Rect, Text as SvgText, G, Line, Circle, Path } from "react-native-svg";
-import { useDesignerStore, Room } from "@/lib/store";
+import { useDesignerStore, Room, SketchStroke } from "@/lib/store";
 import { useColors } from "@/hooks/useColors";
 import { CompassWidget } from "./CompassWidget";
 
@@ -22,7 +22,7 @@ const MINIMAP_W = 110;
 const MINIMAP_H = 80;
 
 /* ── Types ─────────────────────────────────────────── */
-export type ActiveTool = "select" | "draw" | "pan";
+export type ActiveTool = "select" | "draw" | "pan" | "sketch" | "line";
 export type ResizeHandle = "TL" | "TC" | "TR" | "ML" | "MR" | "BL" | "BC" | "BR";
 
 const ROOM_LABELS: Record<Room["type"], string> = {
@@ -170,6 +170,13 @@ export function FloorPlanCanvas({
   const [size, setSize] = useState({ w: 375, h: 600 });
   const [drawing, setDrawing] = useState<DrawRect | null>(null);
   const [activeDrag, setActiveDrag] = useState<ActiveDrag | null>(null);
+
+  // Sketch state — live stroke points (screen coords, snapped to grid on render)
+  const [liveSketch, setLiveSketch] = useState<Array<{ x: number; y: number }> | null>(null);
+  const liveSketchRef = useRef<Array<{ x: number; y: number }>>([]);
+  const sketchColorRef = useRef("#E02020");
+  // Line tool — start point
+  const lineStartRef = useRef<{ x: number; y: number } | null>(null);
 
   /* ── Room pop-in animations ── */
   const roomAnims = useRef<Map<string, Animated.Value>>(new Map());
@@ -348,6 +355,15 @@ export function FloorPlanCanvas({
         return;
       }
       if (tool === "draw") setDrawing({ x: sx, y: sy, w: 0, h: 0 });
+      if (tool === "sketch") {
+        liveSketchRef.current = [{ x: sx, y: sy }];
+        setLiveSketch([{ x: sx, y: sy }]);
+      }
+      if (tool === "line") {
+        lineStartRef.current = { x: sx, y: sy };
+        liveSketchRef.current = [{ x: sx, y: sy }, { x: sx, y: sy }];
+        setLiveSketch([{ x: sx, y: sy }, { x: sx, y: sy }]);
+      }
     },
 
     onPanResponderMove: (evt, gs) => {
@@ -398,6 +414,21 @@ export function FloorPlanCanvas({
         setActiveDrag({ type: "move", room: updated, guides: computeGuides(updated, planRef.current?.rooms ?? []) }); return;
       }
       if (tool === "draw") setDrawing({ x: gestureStart.current.x, y: gestureStart.current.y, w: gs.dx, h: gs.dy });
+      if (tool === "sketch") {
+        const cx = gestureStart.current.x + gs.dx;
+        const cy = gestureStart.current.y + gs.dy;
+        liveSketchRef.current = [...liveSketchRef.current, { x: cx, y: cy }];
+        // Throttle re-render — only update every 3 points to keep 60fps
+        if (liveSketchRef.current.length % 3 === 0) {
+          setLiveSketch([...liveSketchRef.current]);
+        }
+      }
+      if (tool === "line" && lineStartRef.current) {
+        const cx = gestureStart.current.x + gs.dx;
+        const cy = gestureStart.current.y + gs.dy;
+        liveSketchRef.current = [lineStartRef.current, { x: cx, y: cy }];
+        setLiveSketch([...liveSketchRef.current]);
+      }
     },
 
     onPanResponderRelease: (_, gs) => {
@@ -436,12 +467,38 @@ export function FloorPlanCanvas({
         onRoomDrawn?.({ type: drawRoomType, x: Math.max(0, rx), y: Math.max(0, ry), width: rw, height: rh, direction: "N", area: rw * rh * 4 });
         return;
       }
+      // Sketch freehand — snap all points to grid and save
+      if (tool === "sketch" && liveSketchRef.current.length > 1) {
+        const pts = liveSketchRef.current.map(p => {
+          const g = toGrid(p.x, p.y);
+          return { x: snap(g.gx), y: snap(g.gy) };
+        });
+        store.addSketch({ points: pts, color: sketchColorRef.current, width: 2, type: "freehand" });
+        liveSketchRef.current = [];
+        setLiveSketch(null);
+        return;
+      }
+      // Line tool — snap start and end to grid
+      if (tool === "line" && liveSketchRef.current.length === 2) {
+        const [p0, p1] = liveSketchRef.current;
+        const g0 = toGrid(p0.x, p0.y);
+        const g1 = toGrid(p1.x, p1.y);
+        store.addSketch({
+          points: [{ x: snap(g0.gx), y: snap(g0.gy) }, { x: snap(g1.gx), y: snap(g1.gy) }],
+          color: sketchColorRef.current, width: 2, type: "line",
+        });
+        liveSketchRef.current = [];
+        lineStartRef.current = null;
+        setLiveSketch(null);
+        return;
+      }
       moveStart.current = null; setActiveDrag(null);
     },
 
     onPanResponderTerminate: () => {
       moveStart.current = null; resizeStart.current = null; pinchRef.current = null;
       isPinching.current = false; setActiveDrag(null); setDrawing(null);
+      liveSketchRef.current = []; lineStartRef.current = null; setLiveSketch(null);
     },
   })).current;
 
@@ -721,6 +778,40 @@ export function FloorPlanCanvas({
         )}
         <G>{guideEls}</G>
         <G>{roomEls}</G>
+        {/* ── Saved sketch strokes ── */}
+        <G>
+          {(store.currentPlan.sketches ?? []).map((stroke) => {
+            if (stroke.points.length < 2) return null;
+            // Convert grid coords back to screen coords
+            const screenPts = stroke.points.map(p => ({
+              sx: p.x * G_PX * zoom + store.panX,
+              sy: p.y * G_PX * zoom + store.panY,
+            }));
+            const d = screenPts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.sx.toFixed(1)} ${p.sy.toFixed(1)}`).join(" ");
+            return (
+              <Path key={stroke.id} d={d}
+                stroke={stroke.color} strokeWidth={stroke.width * zoom}
+                fill="none" strokeLinecap="round" strokeLinejoin="round"
+                opacity={0.85}
+              />
+            );
+          })}
+        </G>
+        {/* ── Live sketch preview (while drawing) ── */}
+        {liveSketch && liveSketch.length > 1 && (
+          <G>
+            {(() => {
+              const d = liveSketch.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+              return (
+                <Path d={d}
+                  stroke={sketchColorRef.current} strokeWidth={2}
+                  fill="none" strokeLinecap="round" strokeLinejoin="round"
+                  opacity={0.7} strokeDasharray={activeTool === "line" ? "6,3" : undefined}
+                />
+              );
+            })()}
+          </G>
+        )}
         {drawPreview}
       </Svg>
 

@@ -407,6 +407,11 @@ function ToolbarContent({ activeTool, canUndo, canRedo, hasSelection, showGrid, 
       <TBtn icon="edit-2" active={activeTool === "draw"} onPress={() => setTool("draw")} />
       <TBtn icon="move" active={activeTool === "pan"} onPress={() => setTool("pan")} />
       <TDivider />
+      <TBtn icon="pen-tool" active={activeTool === "sketch"} onPress={() => setTool("sketch")} />
+      <TBtn icon="minus" active={activeTool === "line"} onPress={() => setTool("line")} />
+      <TBtn icon="trash-2" danger={false} disabled={false}
+        onPress={() => { store.clearSketches(); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); }} />
+      <TDivider />
       <TBtn icon="rotate-ccw" disabled={!canUndo}
         onPress={() => { if (canUndo) { store.undo(); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } }} />
       <TBtn icon="rotate-cw" disabled={!canRedo}
