@@ -60,6 +60,8 @@ export interface FloorPlanCanvasProps {
   onRoomSelect?: (id: string | null) => void;
   onRoomDrawn?: (room: Omit<Room, "id">) => void;
   canvasRef?: React.RefObject<View>;
+  sketchColor?: string;
+  sketchSize?: number;
 }
 
 /* ── Helpers ───────────────────────────────────────── */
@@ -162,6 +164,7 @@ const Minimap = memo(function Minimap({
 /* ── Main Component ────────────────────────────────── */
 export function FloorPlanCanvas({
   activeTool, drawRoomType, showGrid, onRoomSelect, onRoomDrawn, canvasRef,
+  sketchColor = "#E02020", sketchSize = 4,
 }: FloorPlanCanvasProps) {
   const colors = useColors();
   const store = useDesignerStore();
@@ -174,7 +177,11 @@ export function FloorPlanCanvas({
   // Sketch state — live stroke points (screen coords, snapped to grid on render)
   const [liveSketch, setLiveSketch] = useState<Array<{ x: number; y: number }> | null>(null);
   const liveSketchRef = useRef<Array<{ x: number; y: number }>>([]);
-  const sketchColorRef = useRef("#E02020");
+  const sketchColorRef = useRef(sketchColor);
+  const sketchSizeRef = useRef(sketchSize);
+  // Keep refs in sync with props
+  sketchColorRef.current = sketchColor;
+  sketchSizeRef.current = sketchSize;
   // Line tool — start point
   const lineStartRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -473,7 +480,7 @@ export function FloorPlanCanvas({
           const g = toGrid(p.x, p.y);
           return { x: snap(g.gx), y: snap(g.gy) };
         });
-        store.addSketch({ points: pts, color: sketchColorRef.current, width: 2, type: "freehand" });
+        store.addSketch({ points: pts, color: sketchColorRef.current, width: sketchSizeRef.current, type: "freehand" });
         liveSketchRef.current = [];
         setLiveSketch(null);
         return;
@@ -485,7 +492,7 @@ export function FloorPlanCanvas({
         const g1 = toGrid(p1.x, p1.y);
         store.addSketch({
           points: [{ x: snap(g0.gx), y: snap(g0.gy) }, { x: snap(g1.gx), y: snap(g1.gy) }],
-          color: sketchColorRef.current, width: 2, type: "line",
+          color: sketchColorRef.current, width: sketchSizeRef.current, type: "line",
         });
         liveSketchRef.current = [];
         lineStartRef.current = null;
@@ -804,7 +811,7 @@ export function FloorPlanCanvas({
               const d = liveSketch.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
               return (
                 <Path d={d}
-                  stroke={sketchColorRef.current} strokeWidth={2}
+                  stroke={sketchColorRef.current} strokeWidth={sketchSizeRef.current}
                   fill="none" strokeLinecap="round" strokeLinejoin="round"
                   opacity={0.7} strokeDasharray={activeTool === "line" ? "6,3" : undefined}
                 />

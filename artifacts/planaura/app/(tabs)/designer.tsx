@@ -20,6 +20,7 @@ import { ScalePress } from "@/components/ScalePress";
 import { useToast } from "@/components/Toast";
 
 type PanelTab = "properties" | "vastu" | "cost";
+type DesignerMode = "rooms" | "sketch";
 const PANEL_HEIGHT = 420;
 
 const ROOM_TYPES: Array<{ type: Room["type"]; label: string; color: string }> = [
@@ -31,20 +32,22 @@ const ROOM_TYPES: Array<{ type: Room["type"]; label: string; color: string }> = 
   { type: "dining_room", label: "Dining",  color: "#DB2777" },
 ];
 
+const SKETCH_COLORS = ["#E02020","#0A0A0A","#7C3AED","#0284C7","#059669","#EA580C","#D97706","#DB2777"];
+const SKETCH_SIZES = [2, 4, 8, 14];
+
 /* ── Toolbar button ── */
-function TBtn({ icon, active, danger, disabled, onPress }: {
-  icon: string; active?: boolean; danger?: boolean; disabled?: boolean; onPress: () => void;
+function TBtn({ icon, active, danger, disabled, onPress, color }: {
+  icon: string; active?: boolean; danger?: boolean; disabled?: boolean;
+  onPress: () => void; color?: string;
 }) {
   const colors = useColors();
+  const bg = active ? (color ?? colors.primary) : "transparent";
+  const iconColor = active ? "#fff" : danger ? colors.destructive : disabled ? colors.muted : colors.foreground;
   return (
     <ScalePress onPress={disabled ? undefined : onPress}
-      style={[styles.tBtn, active && { backgroundColor: colors.primary }]}
+      style={[styles.tBtn, { backgroundColor: bg }]}
       scale={0.88} disabled={disabled}>
-      <Feather
-        name={icon as any} size={17}
-        color={active ? "#fff" : danger ? colors.destructive : disabled ? colors.muted : colors.foreground}
-        style={{ opacity: disabled ? 0.3 : 1 }}
-      />
+      <Feather name={icon as any} size={17} color={iconColor} style={{ opacity: disabled ? 0.3 : 1 }} />
     </ScalePress>
   );
 }
@@ -125,6 +128,10 @@ export default function DesignerScreen() {
   const [panelMounted, setPanelMounted] = useState(false);
   const [panelTab, setPanelTab] = useState<PanelTab>("properties");
   const [showRename, setShowRename] = useState(false);
+  // Designer mode
+  const [designerMode, setDesignerMode] = useState<DesignerMode>("rooms");
+  const [sketchColor, setSketchColor] = useState("#E02020");
+  const [sketchSize, setSketchSize] = useState(4);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom;
@@ -229,6 +236,8 @@ export default function DesignerScreen() {
           activeTool={activeTool} drawRoomType={drawRoomType}
           showGrid={showGrid} onRoomSelect={handleRoomSelect} onRoomDrawn={handleRoomDrawn}
           canvasRef={canvasViewRef}
+          sketchColor={sketchColor}
+          sketchSize={sketchSize}
         />
 
         {/* Floating toolbar */}
@@ -237,13 +246,17 @@ export default function DesignerScreen() {
             style={[styles.toolbar, { borderColor: colors.glassBorder }]}>
             <ToolbarContent activeTool={activeTool} canUndo={canUndo} canRedo={canRedo}
               hasSelection={hasSelection} showGrid={showGrid} store={store}
-              setTool={setTool} handleDelete={handleDelete} setShowGrid={setShowGrid} />
+              setTool={setTool} handleDelete={handleDelete} setShowGrid={setShowGrid}
+              designerMode={designerMode} sketchColor={sketchColor} setSketchColor={setSketchColor}
+              sketchSize={sketchSize} setSketchSize={setSketchSize} />
           </BlurView>
         ) : (
           <View style={[styles.toolbar, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <ToolbarContent activeTool={activeTool} canUndo={canUndo} canRedo={canRedo}
               hasSelection={hasSelection} showGrid={showGrid} store={store}
-              setTool={setTool} handleDelete={handleDelete} setShowGrid={setShowGrid} />
+              setTool={setTool} handleDelete={handleDelete} setShowGrid={setShowGrid}
+              designerMode={designerMode} sketchColor={sketchColor} setSketchColor={setSketchColor}
+              sketchSize={sketchSize} setSketchSize={setSketchSize} />
           </View>
         )}
 
@@ -296,12 +309,24 @@ export default function DesignerScreen() {
         <BlurView intensity={80} tint={isDark ? "dark" : "extraLight"}
           style={[styles.bottomBar, { borderTopColor: colors.border, paddingBottom: botPad + 2 }]}>
           <BottomBarContent showPanel={showPanel} panelTab={panelTab} hasSelection={hasSelection}
-            colors={colors} openPanelOnTab={openPanelOnTab} />
+            colors={colors} openPanelOnTab={openPanelOnTab}
+            designerMode={designerMode} setDesignerMode={(m: DesignerMode) => {
+              setDesignerMode(m);
+              if (m === "sketch") setActiveTool("sketch");
+              else setActiveTool("select");
+              Haptics.selectionAsync();
+            }} />
         </BlurView>
       ) : (
         <View style={[styles.bottomBar, { backgroundColor: colors.card, borderTopColor: colors.border, paddingBottom: botPad + 2 }]}>
           <BottomBarContent showPanel={showPanel} panelTab={panelTab} hasSelection={hasSelection}
-            colors={colors} openPanelOnTab={openPanelOnTab} />
+            colors={colors} openPanelOnTab={openPanelOnTab}
+            designerMode={designerMode} setDesignerMode={(m: DesignerMode) => {
+              setDesignerMode(m);
+              if (m === "sketch") setActiveTool("sketch");
+              else setActiveTool("select");
+              Haptics.selectionAsync();
+            }} />
         </View>
       )}
 
@@ -400,17 +425,48 @@ function HeaderContent({ store, colors, vastuScore, scoreColor, roomCount, onRen
   );
 }
 
-function ToolbarContent({ activeTool, canUndo, canRedo, hasSelection, showGrid, store, setTool, handleDelete, setShowGrid }: any) {
+function ToolbarContent({ activeTool, canUndo, canRedo, hasSelection, showGrid, store, setTool, handleDelete, setShowGrid, designerMode, sketchColor, setSketchColor, sketchSize, setSketchSize }: any) {
+  const colors = useColors();
+
+  if (designerMode === "sketch") {
+    return (
+      <>
+        {/* Sketch tools */}
+        <TBtn icon="pen-tool" active={activeTool === "sketch"} onPress={() => setTool("sketch")} color={sketchColor} />
+        <TBtn icon="minus" active={activeTool === "line"} onPress={() => setTool("line")} color={sketchColor} />
+        <TBtn icon="delete" active={activeTool === "eraser"} onPress={() => setTool("eraser")} />
+        <TDivider />
+        {/* Brush sizes */}
+        {[2, 4, 8, 14].map((s) => (
+          <ScalePress key={s} onPress={() => { setSketchSize(s); Haptics.selectionAsync(); }}
+            style={[styles.tBtn, sketchSize === s && { backgroundColor: sketchColor + "30", borderWidth: 1.5, borderColor: sketchColor }]}
+            scale={0.88}>
+            <View style={{
+              width: Math.min(s * 1.4, 16), height: Math.min(s * 1.4, 16),
+              borderRadius: 10, backgroundColor: sketchColor,
+            }} />
+          </ScalePress>
+        ))}
+        <TDivider />
+        {/* Colors */}
+        {SKETCH_COLORS.slice(0, 4).map((c) => (
+          <ScalePress key={c} onPress={() => { setSketchColor(c); Haptics.selectionAsync(); }}
+            style={[styles.colorDot, { backgroundColor: c, borderWidth: sketchColor === c ? 2 : 0, borderColor: "#fff" }]}
+            scale={0.88} />
+        ))}
+        <TDivider />
+        <TBtn icon="corner-left-up" onPress={() => { store.clearSketches(); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }} />
+        <TBtn icon="grid" active={showGrid} onPress={() => { setShowGrid(!showGrid); Haptics.selectionAsync(); }} />
+      </>
+    );
+  }
+
+  // Rooms mode
   return (
     <>
       <TBtn icon="mouse-pointer" active={activeTool === "select"} onPress={() => setTool("select")} />
       <TBtn icon="edit-2" active={activeTool === "draw"} onPress={() => setTool("draw")} />
       <TBtn icon="move" active={activeTool === "pan"} onPress={() => setTool("pan")} />
-      <TDivider />
-      <TBtn icon="pen-tool" active={activeTool === "sketch"} onPress={() => setTool("sketch")} />
-      <TBtn icon="minus" active={activeTool === "line"} onPress={() => setTool("line")} />
-      <TBtn icon="trash-2" danger={false} disabled={false}
-        onPress={() => { store.clearSketches(); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); }} />
       <TDivider />
       <TBtn icon="rotate-ccw" disabled={!canUndo}
         onPress={() => { if (canUndo) { store.undo(); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } }} />
@@ -438,41 +494,58 @@ function ZoomContent({ store, colors }: any) {
   );
 }
 
-function BottomBarContent({ showPanel, panelTab, hasSelection, colors, openPanelOnTab }: any) {
+function BottomBarContent({ showPanel, panelTab, hasSelection, colors, openPanelOnTab, designerMode, setDesignerMode }: any) {
   const vastuActive = panelTab === "vastu" && showPanel;
   const costActive = panelTab === "cost" && showPanel;
   const propActive = panelTab === "properties" && showPanel;
   return (
     <>
+      {/* Mode toggle — Rooms / Sketch */}
       <View style={[styles.viewToggle, { backgroundColor: colors.mutedBg }]}>
-        <View style={[styles.viewBtn, { backgroundColor: colors.primary }]}>
-          <Text style={[styles.viewBtnText, { color: "#fff" }]}>2D</Text>
-        </View>
-        <ScalePress
-          onPress={() => Alert.alert("3D View", "Full 3D rendering is coming in v2.", [{ text: "OK" }])}
-          style={styles.viewBtn} scale={0.93}>
-          <Text style={[styles.viewBtnText, { color: colors.mutedForeground }]}>3D</Text>
+        <ScalePress onPress={() => setDesignerMode("rooms")}
+          style={[styles.viewBtn, designerMode === "rooms" && { backgroundColor: colors.primary }]} scale={0.93}>
+          <Text style={[styles.viewBtnText, { color: designerMode === "rooms" ? "#fff" : colors.mutedForeground }]}>Rooms</Text>
+        </ScalePress>
+        <ScalePress onPress={() => setDesignerMode("sketch")}
+          style={[styles.viewBtn, designerMode === "sketch" && { backgroundColor: colors.primary }]} scale={0.93}>
+          <Text style={[styles.viewBtnText, { color: designerMode === "sketch" ? "#fff" : colors.mutedForeground }]}>Sketch</Text>
         </ScalePress>
       </View>
-      <View style={styles.barRight}>
-        <ScalePress onPress={() => openPanelOnTab("vastu")}
-          style={[styles.barBtn, vastuActive && { backgroundColor: colors.primaryMuted }]} scale={0.93}>
-          <Feather name="compass" size={18} color={vastuActive ? colors.primary : colors.mutedForeground} />
-          <Text style={[styles.barBtnText, { color: vastuActive ? colors.primary : colors.mutedForeground }]}>Vastu</Text>
-        </ScalePress>
-        <ScalePress onPress={() => openPanelOnTab("cost")}
-          style={[styles.barBtn, costActive && { backgroundColor: colors.primaryMuted }]} scale={0.93}>
-          <Feather name="trending-up" size={18} color={costActive ? colors.primary : colors.mutedForeground} />
-          <Text style={[styles.barBtnText, { color: costActive ? colors.primary : colors.mutedForeground }]}>Cost</Text>
-        </ScalePress>
-        {hasSelection && (
-          <ScalePress onPress={() => openPanelOnTab("properties")}
-            style={[styles.barBtn, propActive && { backgroundColor: colors.primaryMuted }]} scale={0.93}>
-            <Feather name="sliders" size={18} color={propActive ? colors.primary : colors.mutedForeground} />
-            <Text style={[styles.barBtnText, { color: propActive ? colors.primary : colors.mutedForeground }]}>Edit</Text>
+
+      {/* Right side — analysis buttons (only in rooms mode) */}
+      {designerMode === "rooms" && (
+        <View style={styles.barRight}>
+          <ScalePress onPress={() => openPanelOnTab("vastu")}
+            style={[styles.barBtn, vastuActive && { backgroundColor: colors.primaryMuted }]} scale={0.93}>
+            <Feather name="compass" size={18} color={vastuActive ? colors.primary : colors.mutedForeground} />
+            <Text style={[styles.barBtnText, { color: vastuActive ? colors.primary : colors.mutedForeground }]}>Vastu</Text>
           </ScalePress>
-        )}
-      </View>
+          <ScalePress onPress={() => openPanelOnTab("cost")}
+            style={[styles.barBtn, costActive && { backgroundColor: colors.primaryMuted }]} scale={0.93}>
+            <Feather name="trending-up" size={18} color={costActive ? colors.primary : colors.mutedForeground} />
+            <Text style={[styles.barBtnText, { color: costActive ? colors.primary : colors.mutedForeground }]}>Cost</Text>
+          </ScalePress>
+          {hasSelection && (
+            <ScalePress onPress={() => openPanelOnTab("properties")}
+              style={[styles.barBtn, propActive && { backgroundColor: colors.primaryMuted }]} scale={0.93}>
+              <Feather name="sliders" size={18} color={propActive ? colors.primary : colors.mutedForeground} />
+              <Text style={[styles.barBtnText, { color: propActive ? colors.primary : colors.mutedForeground }]}>Edit</Text>
+            </ScalePress>
+          )}
+        </View>
+      )}
+
+      {/* Sketch mode — remaining colors in bottom bar */}
+      {designerMode === "sketch" && (
+        <View style={styles.barRight}>
+          {SKETCH_COLORS.slice(4).map((c) => (
+            <View key={c} style={[styles.colorDotBar, { backgroundColor: c }]} />
+          ))}
+          <Text style={[styles.barBtnText, { color: colors.mutedForeground, marginLeft: 8 }]}>
+            Tap color in toolbar
+          </Text>
+        </View>
+      )}
     </>
   );
 }
@@ -615,4 +688,11 @@ const styles = StyleSheet.create({
   renameActions: { flexDirection: "row", gap: 10 },
   renameBtn: { flex: 1, paddingVertical: 14, borderRadius: 16, alignItems: "center" },
   renameBtnText: { fontSize: 15, fontWeight: "700" },
+  colorDot: {
+    width: 22, height: 22, borderRadius: 11,
+    borderWidth: 0, borderColor: "#fff",
+  },
+  colorDotBar: {
+    width: 18, height: 18, borderRadius: 9,
+  },
 });
