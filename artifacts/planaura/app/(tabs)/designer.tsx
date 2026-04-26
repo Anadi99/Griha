@@ -11,6 +11,7 @@ import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
 import { useDesignerStore, Room } from "@/lib/store";
 import { FloorPlanCanvas, ActiveTool } from "@/components/FloorPlanCanvas";
+import { SketchCanvas } from "@/components/SketchCanvas";
 import { RoomPropertiesPanel } from "@/components/RoomPropertiesPanel";
 import { VastuPanel } from "@/components/VastuPanel";
 import { CostPanel } from "@/components/CostPanel";
@@ -232,75 +233,81 @@ export default function DesignerScreen() {
 
       {/* ── Canvas ── */}
       <View style={styles.canvasArea}>
-        <FloorPlanCanvas
-          activeTool={activeTool} drawRoomType={drawRoomType}
-          showGrid={showGrid} onRoomSelect={handleRoomSelect} onRoomDrawn={handleRoomDrawn}
-          canvasRef={canvasViewRef}
-          sketchColor={sketchColor}
-          sketchSize={sketchSize}
-        />
-
-        {/* Floating toolbar */}
-        {isIOS ? (
-          <BlurView intensity={70} tint={isDark ? "dark" : "extraLight"}
-            style={[styles.toolbar, { borderColor: colors.glassBorder }]}>
-            <ToolbarContent activeTool={activeTool} canUndo={canUndo} canRedo={canRedo}
-              hasSelection={hasSelection} showGrid={showGrid} store={store}
-              setTool={setTool} handleDelete={handleDelete} setShowGrid={setShowGrid}
-              designerMode={designerMode} sketchColor={sketchColor} setSketchColor={setSketchColor}
-              sketchSize={sketchSize} setSketchSize={setSketchSize} />
-          </BlurView>
+        {designerMode === "sketch" ? (
+          <SketchCanvas showGrid={showGrid} canvasRef={canvasViewRef} />
         ) : (
-          <View style={[styles.toolbar, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <ToolbarContent activeTool={activeTool} canUndo={canUndo} canRedo={canRedo}
-              hasSelection={hasSelection} showGrid={showGrid} store={store}
-              setTool={setTool} handleDelete={handleDelete} setShowGrid={setShowGrid}
-              designerMode={designerMode} sketchColor={sketchColor} setSketchColor={setSketchColor}
-              sketchSize={sketchSize} setSketchSize={setSketchSize} />
-          </View>
-        )}
+          <>
+            <FloorPlanCanvas
+              activeTool={activeTool} drawRoomType={drawRoomType}
+              showGrid={showGrid} onRoomSelect={handleRoomSelect} onRoomDrawn={handleRoomDrawn}
+              canvasRef={canvasViewRef}
+              sketchColor={sketchColor}
+              sketchSize={sketchSize}
+            />
 
-        {/* Room type strip */}
-        {activeTool === "draw" && (
-          <View style={[styles.roomStrip, { backgroundColor: colors.card + "F5", borderColor: colors.border }]}>
-            {ROOM_TYPES.map((rt) => {
-              const isActive = drawRoomType === rt.type;
-              return (
-                <ScalePress key={rt.type}
-                  onPress={() => { setDrawRoomType(rt.type); Haptics.selectionAsync(); }}
-                  style={[styles.roomBtn, {
-                    backgroundColor: isActive ? rt.color : colors.mutedBg,
-                    borderColor: isActive ? rt.color : "transparent",
-                  }]} scale={0.91}>
-                  <Text style={[styles.roomBtnText, { color: isActive ? "#fff" : colors.mutedForeground }]}>
-                    {rt.label}
-                  </Text>
-                </ScalePress>
-              );
-            })}
-          </View>
-        )}
+            {/* Floating toolbar — rooms mode only */}
+            {isIOS ? (
+              <BlurView intensity={70} tint={isDark ? "dark" : "extraLight"}
+                style={[styles.toolbar, { borderColor: colors.glassBorder }]}>
+                <ToolbarContent activeTool={activeTool} canUndo={canUndo} canRedo={canRedo}
+                  hasSelection={hasSelection} showGrid={showGrid} store={store}
+                  setTool={setTool} handleDelete={handleDelete} setShowGrid={setShowGrid}
+                  designerMode={designerMode} sketchColor={sketchColor} setSketchColor={setSketchColor}
+                  sketchSize={sketchSize} setSketchSize={setSketchSize} />
+              </BlurView>
+            ) : (
+              <View style={[styles.toolbar, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <ToolbarContent activeTool={activeTool} canUndo={canUndo} canRedo={canRedo}
+                  hasSelection={hasSelection} showGrid={showGrid} store={store}
+                  setTool={setTool} handleDelete={handleDelete} setShowGrid={setShowGrid}
+                  designerMode={designerMode} sketchColor={sketchColor} setSketchColor={setSketchColor}
+                  sketchSize={sketchSize} setSketchSize={setSketchSize} />
+              </View>
+            )}
 
-        {/* Draw hint */}
-        {activeTool === "draw" && (
-          <View style={[styles.hintPill, { backgroundColor: activeRoomColor }]}>
-            <Feather name="crosshair" size={11} color="#fff" />
-            <Text style={styles.hintText}>
-              Drag to draw {ROOM_TYPES.find((r) => r.type === drawRoomType)?.label}
-            </Text>
-          </View>
-        )}
+            {/* Room type strip */}
+            {activeTool === "draw" && (
+              <View style={[styles.roomStrip, { backgroundColor: colors.card + "F5", borderColor: colors.border }]}>
+                {ROOM_TYPES.map((rt) => {
+                  const isActive = drawRoomType === rt.type;
+                  return (
+                    <ScalePress key={rt.type}
+                      onPress={() => { setDrawRoomType(rt.type); Haptics.selectionAsync(); }}
+                      style={[styles.roomBtn, {
+                        backgroundColor: isActive ? rt.color : colors.mutedBg,
+                        borderColor: isActive ? rt.color : "transparent",
+                      }]} scale={0.91}>
+                      <Text style={[styles.roomBtnText, { color: isActive ? "#fff" : colors.mutedForeground }]}>
+                        {rt.label}
+                      </Text>
+                    </ScalePress>
+                  );
+                })}
+              </View>
+            )}
 
-        {/* Zoom cluster */}
-        {isIOS ? (
-          <BlurView intensity={70} tint={isDark ? "dark" : "extraLight"}
-            style={[styles.zoomCluster, { borderColor: colors.glassBorder }]}>
-            <ZoomContent store={store} colors={colors} />
-          </BlurView>
-        ) : (
-          <View style={[styles.zoomCluster, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <ZoomContent store={store} colors={colors} />
-          </View>
+            {/* Draw hint */}
+            {activeTool === "draw" && (
+              <View style={[styles.hintPill, { backgroundColor: activeRoomColor }]}>
+                <Feather name="crosshair" size={11} color="#fff" />
+                <Text style={styles.hintText}>
+                  Drag to draw {ROOM_TYPES.find((r) => r.type === drawRoomType)?.label}
+                </Text>
+              </View>
+            )}
+
+            {/* Zoom cluster */}
+            {isIOS ? (
+              <BlurView intensity={70} tint={isDark ? "dark" : "extraLight"}
+                style={[styles.zoomCluster, { borderColor: colors.glassBorder }]}>
+                <ZoomContent store={store} colors={colors} />
+              </BlurView>
+            ) : (
+              <View style={[styles.zoomCluster, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <ZoomContent store={store} colors={colors} />
+              </View>
+            )}
+          </>
         )}
       </View>
 

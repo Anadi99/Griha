@@ -1,21 +1,10 @@
 /**
  * SketchCanvas — Lorien-inspired freehand drawing canvas
- * Features:
- * - Smooth freehand strokes with point optimizer (angle + distance threshold)
- * - Variable brush size
- * - Color picker
- * - Eraser tool
- * - Undo / clear
- * - Grid snap toggle
- * - Infinite pan + pinch zoom
- * - Strokes rendered as smooth SVG paths
+ * Integrated into Designer — dark canvas, full color palette, brush types
  */
 import React, { useRef, useState, useCallback, useEffect } from "react";
-import {
-  View, PanResponder, StyleSheet, Animated,
-  useColorScheme, Text,
-} from "react-native";
-import Svg, { Path, G, Line } from "react-native-svg";
+import { View, PanResponder, StyleSheet, Animated, useColorScheme, Text, ScrollView } from "react-native";
+import Svg, { Path, G, Line, Rect } from "react-native-svg";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
@@ -25,58 +14,90 @@ import { ScalePress } from "@/components/ScalePress";
 const G_PX = 20;
 const INERTIA_DECAY = 0.88;
 const INERTIA_STOP = 0.3;
-// Stroke optimizer thresholds (from Lorien)
-const MIN_DISTANCE = 3.0;
-const ANGLE_THRESHOLD = 0.8; // degrees
+const MIN_DISTANCE = 2.5;
+const ANGLE_THRESHOLD = 0.6;
 
 /* ── Types ── */
 interface Point { x: number; y: number }
+
+export type BrushType = "pen" | "brush" | "marker" | "pencil" | "line" | "rect";
+
 interface Stroke {
   id: string;
   points: Point[];
   color: string;
   width: number;
+  brushType: BrushType;
+  opacity: number;
   isEraser: boolean;
 }
 
-type SketchTool = "brush" | "eraser";
+/* ── Color palette — 16 colors ── */
+export const SKETCH_PALETTE = [
+  "#FFFFFF", "#000000", "#8B5E3C", "#C4714A",
+  "#C084FC", "#38BDF8", "#34D399", "#6366F1",
+  "#FB923C", "#FACC15", "#F472B6", "#EF4444",
+  "#22C55E", "#3B82F6", "#A78BFA", "#94A3B8",
+];
 
-/* ── Stroke optimizer (port of Lorien's BrushStrokeOptimizer) ── */
+/* ── Brush configs ── */
+export const BRUSH_TYPES: Array<{ type: BrushType; icon: string; label: string }> = [
+  { type: "pen",    icon: "edit-3",   label: "Pen"    },
+  { type: "brush",  icon: "pen-tool", label: "Brush"  },
+  { type: "marker", icon: "minus",    label: "Marker" },
+  { type: "pencil", icon: "feather",  label: "Pencil" },
+  { type: "line",   icon: "minus",    label: "Line"   },
+  { type: "rect",   icon: "square",   label: "Rect"   },
+];
+
+export const BRUSH_SIZES = [1, 3, 6, 12, 20];
+
+/* ── Brush opacity by type ── */
+function getBrushOpacity(type: BrushType): number {
+  switch (type) {
+    case "pen":    return 1.0;
+    case "brush":  return 0.75;
+    case "marker": return 0.55;
+    case "pencil": return 0.45;
+    default:       return 1.0;
+  }
+}
+
+/* ── Stroke width multiplier by type ── */
+function getWidthMultiplier(type: BrushType): number {
+  switch (type) {
+    case "marker": return 2.2;
+    case "brush":  return 1.6;
+    case "pencil": return 0.8;
+    default:       return 1.0;
+  }
+}
+
+/* ── Stroke optimizer ── */
 function optimizePoints(pts: Point[]): Point[] {
   if (pts.length < 6) return pts;
   const out: Point[] = [pts[0]];
   let prevAngle = 0;
   for (let i = 1; i < pts.length; i++) {
-    const prev = pts[i - 1];
-    const cur = pts[i];
-    const dx = cur.x - prev.x;
-    const dy = cur.y - prev.y;
+    const prev = pts[i - 1], cur = pts[i];
+    const dx = cur.x - prev.x, dy = cur.y - prev.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
     const angle = Math.atan2(dy, dx) * (180 / Math.PI);
     const angleDiff = Math.abs(Math.abs(angle) - Math.abs(prevAngle));
     prevAngle = angle;
-    if (dist > MIN_DISTANCE || angleDiff >= ANGLE_THRESHOLD) {
-      out.push(cur);
-    }
+    if (dist > MIN_DISTANCE || angleDiff >= ANGLE_THRESHOLD) out.push(cur);
   }
-  // Always include last point
-  if (out[out.length - 1] !== pts[pts.length - 1]) {
-    out.push(pts[pts.length - 1]);
-  }
+  if (out[out.length - 1] !== pts[pts.length - 1]) out.push(pts[pts.length - 1]);
   return out;
 }
 
-/* ── Build smooth SVG path from points (Catmull-Rom spline) ── */
+/* ── Build smooth SVG path ── */
 function buildPath(pts: Point[]): string {
   if (pts.length < 2) return "";
-  if (pts.length === 2) {
+  if (pts.length === 2)
     return `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)} L ${pts[1].x.toFixed(1)} ${pts[1].y.toFixed(1)}`;
-  }
-  // Smooth curve through all points using cubic bezier approximation
   let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
   for (let i = 1; i < pts.length - 1; i++) {
-    const cp1x = (pts[i - 1].x + pts[i].x) / 2;
-    const cp1y = (pts[i - 1].y + pts[i].y) / 2;
     const cp2x = (pts[i].x + pts[i + 1].x) / 2;
     const cp2y = (pts[i].y + pts[i + 1].y) / 2;
     d += ` Q ${pts[i].x.toFixed(1)} ${pts[i].y.toFixed(1)} ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}`;
@@ -86,20 +107,11 @@ function buildPath(pts: Point[]): string {
   return d;
 }
 
-/* ── Color palette ── */
-const COLORS = [
-  "#8B5E3C", "#1C1008", "#FFFFFF", "#C4714A",
-  "#C084FC", "#38BDF8", "#34D399", "#6366F1",
-  "#FB923C", "#FACC15",
-];
-
-const BRUSH_SIZES = [2, 4, 8, 14, 22];
-
-/* ── Props ── */
 export interface SketchCanvasProps {
   showGrid?: boolean;
   canvasRef?: React.RefObject<View>;
 }
+
 
 export function SketchCanvas({ showGrid = true, canvasRef }: SketchCanvasProps) {
   const colors = useColors();
@@ -108,37 +120,34 @@ export function SketchCanvas({ showGrid = true, canvasRef }: SketchCanvasProps) 
   const [size, setSize] = useState({ w: 375, h: 600 });
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [livePoints, setLivePoints] = useState<Point[]>([]);
-  const [tool, setTool] = useState<SketchTool>("brush");
-  const [brushColor, setBrushColor] = useState("#8B5E3C");
-  const [brushSize, setBrushSize] = useState(4);
+  const [brushType, setBrushType] = useState<BrushType>("pen");
+  const [brushColor, setBrushColor] = useState("#FFFFFF");
+  const [brushSize, setBrushSize] = useState(3);
+  const [isEraser, setIsEraser] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
+  // For line/rect tools
+  const [shapeStart, setShapeStart] = useState<Point | null>(null);
+  const [shapeEnd, setShapeEnd] = useState<Point | null>(null);
 
-  // Refs for gesture (no re-render during draw)
   const liveRef = useRef<Point[]>([]);
-  const zoomRef = useRef(1);
-  const panXRef = useRef(0);
-  const panYRef = useRef(0);
-  const toolRef = useRef<SketchTool>("brush");
-  const colorRef = useRef("#8B5E3C");
-  const sizeRef = useRef(4);
+  const zoomRef = useRef(1); zoomRef.current = zoom;
+  const panXRef = useRef(0); panXRef.current = panX;
+  const panYRef = useRef(0); panYRef.current = panY;
+  const brushTypeRef = useRef<BrushType>("pen"); brushTypeRef.current = brushType;
+  const colorRef = useRef("#FFFFFF"); colorRef.current = brushColor;
+  const sizeRef = useRef(3); sizeRef.current = brushSize;
+  const eraserRef = useRef(false); eraserRef.current = isEraser;
   const isDrawing = useRef(false);
   const isPinching = useRef(false);
+  const shapeStartRef = useRef<Point | null>(null);
   const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const pinchRef = useRef<{ dist: number; zoom: number; midX: number; midY: number; panX: number; panY: number } | null>(null);
   const velX = useRef(0); const velY = useRef(0);
   const lastMoveTime = useRef(0);
   const lastMovePan = useRef({ x: 0, y: 0 });
   const inertiaRaf = useRef<any>(null);
-
-  // Keep refs in sync
-  zoomRef.current = zoom;
-  panXRef.current = panX;
-  panYRef.current = panY;
-  toolRef.current = tool;
-  colorRef.current = brushColor;
-  sizeRef.current = brushSize;
 
   function ptDist(ax: number, ay: number, bx: number, by: number) {
     return Math.sqrt((ax - bx) ** 2 + (ay - by) ** 2);
@@ -153,14 +162,14 @@ export function SketchCanvas({ showGrid = true, canvasRef }: SketchCanvasProps) 
     const step = () => {
       velX.current *= INERTIA_DECAY; velY.current *= INERTIA_DECAY;
       if (Math.abs(velX.current) < INERTIA_STOP && Math.abs(velY.current) < INERTIA_STOP) { stopInertia(); return; }
-      panXRef.current += velX.current;
-      panYRef.current += velY.current;
-      setPanX(panXRef.current);
-      setPanY(panYRef.current);
+      panXRef.current += velX.current; panYRef.current += velY.current;
+      setPanX(panXRef.current); setPanY(panYRef.current);
       inertiaRaf.current = requestAnimationFrame(step);
     };
     inertiaRaf.current = requestAnimationFrame(step);
   }, []);
+
+  const isShapeTool = (t: BrushType) => t === "line" || t === "rect";
 
   const panResponder = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
@@ -172,123 +181,156 @@ export function SketchCanvas({ showGrid = true, canvasRef }: SketchCanvasProps) 
       if (touches && touches.length >= 2) { isPinching.current = true; return; }
       isPinching.current = false;
       const sx = evt.nativeEvent.pageX, sy = evt.nativeEvent.pageY;
+      const tool = brushTypeRef.current;
 
-      if (toolRef.current === "brush" || toolRef.current === "eraser") {
+      if (isShapeTool(tool)) {
+        shapeStartRef.current = { x: sx, y: sy };
+        setShapeStart({ x: sx, y: sy });
+        setShapeEnd({ x: sx, y: sy });
+        isDrawing.current = true;
+      } else if (!eraserRef.current) {
         isDrawing.current = true;
         liveRef.current = [{ x: sx, y: sy }];
         setLivePoints([{ x: sx, y: sy }]);
       } else {
-        // Pan mode (two-finger or when no tool active)
-        panStart.current = { x: sx, y: sy, panX: panXRef.current, panY: panYRef.current };
-        lastMoveTime.current = Date.now();
-        lastMovePan.current = { x: panXRef.current, y: panYRef.current };
+        isDrawing.current = true;
+        liveRef.current = [{ x: sx, y: sy }];
+        setLivePoints([{ x: sx, y: sy }]);
       }
     },
 
     onPanResponderMove: (evt, gs) => {
       const touches = evt.nativeEvent.touches;
-
-      // Pinch zoom
       if (touches && touches.length >= 2) {
-        isPinching.current = true;
-        isDrawing.current = false;
-        liveRef.current = [];
-        setLivePoints([]);
+        isPinching.current = true; isDrawing.current = false;
+        liveRef.current = []; setLivePoints([]); setShapeEnd(null);
         const t0 = touches[0], t1 = touches[1];
         const dist = ptDist(t0.pageX, t0.pageY, t1.pageX, t1.pageY);
-        const midX = (t0.pageX + t1.pageX) / 2;
-        const midY = (t0.pageY + t1.pageY) / 2;
+        const midX = (t0.pageX + t1.pageX) / 2, midY = (t0.pageY + t1.pageY) / 2;
         if (!pinchRef.current) {
           pinchRef.current = { dist, zoom: zoomRef.current, midX, midY, panX: panXRef.current, panY: panYRef.current };
           return;
         }
-        const { dist: initDist, zoom: initZoom, panX: initPanX, panY: initPanY } = pinchRef.current;
-        const newZoom = Math.max(0.2, Math.min(8, initZoom * (dist / initDist)));
-        const ratio = newZoom / initZoom;
-        const newPanX = midX - (midX - initPanX) * ratio + (midX - pinchRef.current.midX);
-        const newPanY = midY - (midY - initPanY) * ratio + (midY - pinchRef.current.midY);
-        zoomRef.current = newZoom; panXRef.current = newPanX; panYRef.current = newPanY;
-        setZoom(newZoom); setPanX(newPanX); setPanY(newPanY);
+        const { dist: id, zoom: iz, panX: ipx, panY: ipy } = pinchRef.current;
+        const nz = Math.max(0.2, Math.min(8, iz * (dist / id)));
+        const ratio = nz / iz;
+        const npx = midX - (midX - ipx) * ratio + (midX - pinchRef.current.midX);
+        const npy = midY - (midY - ipy) * ratio + (midY - pinchRef.current.midY);
+        zoomRef.current = nz; panXRef.current = npx; panYRef.current = npy;
+        setZoom(nz); setPanX(npx); setPanY(npy);
+        return;
+      }
+      if (isPinching.current) return;
+
+      const sx = evt.nativeEvent.pageX, sy = evt.nativeEvent.pageY;
+      const tool = brushTypeRef.current;
+
+      if (isDrawing.current && isShapeTool(tool)) {
+        setShapeEnd({ x: sx, y: sy });
         return;
       }
 
-      if (isPinching.current) return;
-
       if (isDrawing.current) {
-        const sx = evt.nativeEvent.pageX, sy = evt.nativeEvent.pageY;
         liveRef.current.push({ x: sx, y: sy });
-        // Throttle: re-render every 4 points for 60fps
-        if (liveRef.current.length % 4 === 0) {
-          setLivePoints([...liveRef.current]);
-        }
+        if (liveRef.current.length % 4 === 0) setLivePoints([...liveRef.current]);
         return;
       }
 
       // Pan
       const now = Date.now(), dt = now - lastMoveTime.current;
-      const newPX = panStart.current.panX + gs.dx;
-      const newPY = panStart.current.panY + gs.dy;
+      const npx = panStart.current.panX + gs.dx, npy = panStart.current.panY + gs.dy;
       if (dt > 0) {
-        velX.current = (newPX - lastMovePan.current.x) * (1 / dt) * 16;
-        velY.current = (newPY - lastMovePan.current.y) * (1 / dt) * 16;
+        velX.current = (npx - lastMovePan.current.x) * (1 / dt) * 16;
+        velY.current = (npy - lastMovePan.current.y) * (1 / dt) * 16;
       }
-      lastMoveTime.current = now;
-      lastMovePan.current = { x: newPX, y: newPY };
-      panXRef.current = newPX; panYRef.current = newPY;
-      setPanX(newPX); setPanY(newPY);
+      lastMoveTime.current = now; lastMovePan.current = { x: npx, y: npy };
+      panXRef.current = npx; panYRef.current = npy;
+      setPanX(npx); setPanY(npy);
     },
 
-    onPanResponderRelease: () => {
+    onPanResponderRelease: (_, gs) => {
       isPinching.current = false; pinchRef.current = null;
+      const tool = brushTypeRef.current;
+
+      if (isDrawing.current && isShapeTool(tool) && shapeStartRef.current) {
+        const sx = shapeStartRef.current.x, sy = shapeStartRef.current.y;
+        const ex = sx + gs.dx, ey = sy + gs.dy;
+        const pts = tool === "line"
+          ? [{ x: sx, y: sy }, { x: ex, y: ey }]
+          : [{ x: sx, y: sy }, { x: ex, y: sy }, { x: ex, y: ey }, { x: sx, y: ey }, { x: sx, y: sy }];
+        setStrokes(prev => [...prev, {
+          id: `s_${Date.now()}`, points: pts,
+          color: colorRef.current, width: sizeRef.current,
+          brushType: tool, opacity: 1.0, isEraser: false,
+        }]);
+        shapeStartRef.current = null; setShapeStart(null); setShapeEnd(null);
+        isDrawing.current = false;
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        return;
+      }
 
       if (isDrawing.current && liveRef.current.length > 1) {
         const optimized = optimizePoints(liveRef.current);
-        const newStroke: Stroke = {
-          id: `s_${Date.now()}`,
-          points: optimized,
-          color: toolRef.current === "eraser"
-            ? (isDark ? "#1A1008" : "#F5F0E8")
-            : colorRef.current,
-          width: toolRef.current === "eraser" ? sizeRef.current * 3 : sizeRef.current,
-          isEraser: toolRef.current === "eraser",
-        };
-        setStrokes(prev => [...prev, newStroke]);
+        const eraser = eraserRef.current;
+        setStrokes(prev => [...prev, {
+          id: `s_${Date.now()}`, points: optimized,
+          color: eraser ? "#111111" : colorRef.current,
+          width: eraser ? sizeRef.current * 3 : sizeRef.current * getWidthMultiplier(brushTypeRef.current),
+          brushType: brushTypeRef.current,
+          opacity: eraser ? 1.0 : getBrushOpacity(brushTypeRef.current),
+          isEraser: eraser,
+        }]);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
 
-      isDrawing.current = false;
-      liveRef.current = [];
-      setLivePoints([]);
-
+      isDrawing.current = false; liveRef.current = []; setLivePoints([]);
       if (!isDrawing.current) startInertia();
     },
 
     onPanResponderTerminate: () => {
       isPinching.current = false; pinchRef.current = null;
       isDrawing.current = false; liveRef.current = []; setLivePoints([]);
+      shapeStartRef.current = null; setShapeStart(null); setShapeEnd(null);
     },
   })).current;
 
   useEffect(() => () => stopInertia(), []);
 
-  /* ── Grid ── */
   const gSpacing = G_PX * zoom;
   const offX = ((panX % gSpacing) + gSpacing) % gSpacing;
   const offY = ((panY % gSpacing) + gSpacing) % gSpacing;
-  const gridColor = isDark ? "rgba(196,154,108,0.08)" : "rgba(139,94,60,0.07)";
-  const gridColorMain = isDark ? "rgba(196,154,108,0.16)" : "rgba(139,94,60,0.14)";
+  // Dark grid on dark canvas
+  const gridColor = "rgba(255,255,255,0.06)";
+  const gridColorMain = "rgba(255,255,255,0.12)";
 
   const livePath = buildPath(livePoints);
 
+  // Shape preview
+  const shapePreview = shapeStart && shapeEnd ? (() => {
+    const col = brushColor;
+    const sw = brushSize;
+    if (brushType === "line") {
+      return <Line x1={shapeStart.x} y1={shapeStart.y} x2={shapeEnd.x} y2={shapeEnd.y}
+        stroke={col} strokeWidth={sw} strokeLinecap="round" opacity={0.7} strokeDasharray="8,4" />;
+    }
+    if (brushType === "rect") {
+      const x = Math.min(shapeStart.x, shapeEnd.x);
+      const y = Math.min(shapeStart.y, shapeEnd.y);
+      const w = Math.abs(shapeEnd.x - shapeStart.x);
+      const h = Math.abs(shapeEnd.y - shapeStart.y);
+      return <Rect x={x} y={y} width={w} height={h}
+        stroke={col} strokeWidth={sw} fill={col} fillOpacity={0.1}
+        strokeDasharray="8,4" opacity={0.8} />;
+    }
+    return null;
+  })() : null;
+
   return (
     <View style={styles.root}>
-      {/* Canvas */}
-      <View
-        ref={canvasRef}
-        style={[styles.canvas, { backgroundColor: isDark ? "#1A1008" : "#F5F0E8" }]}
+      {/* Dark canvas */}
+      <View ref={canvasRef} style={styles.canvas}
         {...panResponder.panHandlers}
-        onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
-      >
+        onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
         <Svg width={size.w} height={size.h}>
           {/* Grid */}
           {showGrid && (
@@ -297,105 +339,95 @@ export function SketchCanvas({ showGrid = true, canvasRef }: SketchCanvasProps) 
                 const x = offX + i * gSpacing;
                 const isMain = i % 5 === 0;
                 return <Line key={`v${i}`} x1={x} y1={0} x2={x} y2={size.h}
-                  stroke={isMain ? gridColorMain : gridColor} strokeWidth={isMain ? 0.7 : 0.3} />;
+                  stroke={isMain ? gridColorMain : gridColor} strokeWidth={isMain ? 0.6 : 0.25} />;
               })}
               {Array.from({ length: Math.ceil(size.h / gSpacing) + 1 }).map((_, i) => {
                 const y = offY + i * gSpacing;
                 const isMain = i % 5 === 0;
                 return <Line key={`h${i}`} x1={0} y1={y} x2={size.w} y2={y}
-                  stroke={isMain ? gridColorMain : gridColor} strokeWidth={isMain ? 0.7 : 0.3} />;
+                  stroke={isMain ? gridColorMain : gridColor} strokeWidth={isMain ? 0.6 : 0.25} />;
               })}
             </G>
           )}
-
           {/* Saved strokes */}
           <G>
             {strokes.map((stroke) => {
               const d = buildPath(stroke.points);
               if (!d) return null;
-              return (
-                <Path key={stroke.id} d={d}
-                  stroke={stroke.color}
-                  strokeWidth={stroke.width * zoom}
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              );
+              return <Path key={stroke.id} d={d}
+                stroke={stroke.color} strokeWidth={stroke.width * zoom}
+                fill="none" strokeLinecap="round" strokeLinejoin="round"
+                opacity={stroke.opacity} />;
             })}
           </G>
-
           {/* Live stroke */}
           {livePath ? (
             <Path d={livePath}
-              stroke={tool === "eraser" ? (isDark ? "#1A1008" : "#F5F0E8") : brushColor}
-              strokeWidth={(tool === "eraser" ? brushSize * 3 : brushSize) * zoom}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity={0.85}
-            />
+              stroke={isEraser ? "#111111" : brushColor}
+              strokeWidth={(isEraser ? brushSize * 3 : brushSize * getWidthMultiplier(brushType)) * zoom}
+              fill="none" strokeLinecap="round" strokeLinejoin="round"
+              opacity={isEraser ? 1 : getBrushOpacity(brushType)} />
           ) : null}
+          {/* Shape preview */}
+          {shapePreview}
         </Svg>
       </View>
 
-      {/* ── Floating toolbar ── */}
-      <View style={[styles.toolbar, {
-        backgroundColor: isDark ? "rgba(20,20,20,0.92)" : "rgba(255,255,255,0.92)",
-        borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)",
-      }]}>
-        {/* Tool buttons */}
-        <View style={styles.toolRow}>
-          <ScalePress onPress={() => { setTool("brush"); Haptics.selectionAsync(); }}
-            style={[styles.toolBtn, tool === "brush" && { backgroundColor: brushColor }]} scale={0.88}>
-            <Feather name="pen-tool" size={16} color={tool === "brush" ? "#fff" : colors.foreground} />
+      {/* ── Left sidebar toolbar ── */}
+      <View style={styles.sidebar}>
+        {/* Brush types */}
+        {BRUSH_TYPES.map((bt) => (
+          <ScalePress key={bt.type}
+            onPress={() => { setBrushType(bt.type); setIsEraser(false); Haptics.selectionAsync(); }}
+            style={[styles.sideBtn, brushType === bt.type && !isEraser && { backgroundColor: brushColor + "30", borderColor: brushColor }]}
+            scale={0.88}>
+            <Feather name={bt.icon as any} size={15} color={brushType === bt.type && !isEraser ? brushColor : "rgba(255,255,255,0.5)"} />
           </ScalePress>
-          <ScalePress onPress={() => { setTool("eraser"); Haptics.selectionAsync(); }}
-            style={[styles.toolBtn, tool === "eraser" && { backgroundColor: colors.primary }]} scale={0.88}>
-            <Feather name="delete" size={16} color={tool === "eraser" ? "#fff" : colors.foreground} />
-          </ScalePress>
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <ScalePress onPress={() => { setStrokes(prev => prev.slice(0, -1)); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
-            style={styles.toolBtn} scale={0.88}>
-            <Feather name="corner-left-up" size={16} color={colors.foreground} />
-          </ScalePress>
-          <ScalePress onPress={() => { setStrokes([]); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy); }}
-            style={styles.toolBtn} scale={0.88}>
-            <Feather name="trash-2" size={16} color={colors.destructive} />
-          </ScalePress>
-        </View>
+        ))}
+        <View style={styles.sideDivider} />
+        {/* Eraser */}
+        <ScalePress onPress={() => { setIsEraser(!isEraser); Haptics.selectionAsync(); }}
+          style={[styles.sideBtn, isEraser && { backgroundColor: "#ffffff30", borderColor: "#fff" }]} scale={0.88}>
+          <Feather name="delete" size={15} color={isEraser ? "#fff" : "rgba(255,255,255,0.5)"} />
+        </ScalePress>
+        {/* Undo */}
+        <ScalePress onPress={() => { setStrokes(p => p.slice(0, -1)); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+          style={styles.sideBtn} scale={0.88}>
+          <Feather name="corner-left-up" size={15} color="rgba(255,255,255,0.5)" />
+        </ScalePress>
+        {/* Clear */}
+        <ScalePress onPress={() => { setStrokes([]); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy); }}
+          style={styles.sideBtn} scale={0.88}>
+          <Feather name="trash-2" size={15} color="rgba(255,100,100,0.7)" />
+        </ScalePress>
+      </View>
 
+      {/* ── Bottom toolbar ── */}
+      <View style={styles.bottomBar}>
         {/* Brush sizes */}
-        <View style={styles.sizeRow}>
+        <View style={styles.sizesRow}>
           {BRUSH_SIZES.map((s) => (
             <ScalePress key={s} onPress={() => { setBrushSize(s); Haptics.selectionAsync(); }}
-              style={[styles.sizeBtn, brushSize === s && { borderColor: brushColor, borderWidth: 2 }]}
-              scale={0.88}>
+              style={[styles.sizeBtn, brushSize === s && { borderColor: brushColor, borderWidth: 2 }]} scale={0.88}>
               <View style={[styles.sizeDot, {
-                width: Math.min(s * 1.5, 20),
-                height: Math.min(s * 1.5, 20),
-                borderRadius: Math.min(s * 1.5, 20) / 2,
-                backgroundColor: brushColor,
+                width: Math.min(s * 1.4, 18), height: Math.min(s * 1.4, 18),
+                borderRadius: 10, backgroundColor: brushColor,
               }]} />
             </ScalePress>
           ))}
         </View>
-
         {/* Color palette */}
-        <View style={styles.colorRow}>
-          {COLORS.map((c) => (
-            <ScalePress key={c} onPress={() => { setBrushColor(c); setTool("brush"); Haptics.selectionAsync(); }}
-              style={[styles.colorBtn, { backgroundColor: c },
-                brushColor === c && { borderWidth: 2.5, borderColor: isDark ? "#fff" : "#000" },
-                c === "#FFFFFF" && { borderWidth: 1, borderColor: colors.border },
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorScroll}>
+          {SKETCH_PALETTE.map((c) => (
+            <ScalePress key={c} onPress={() => { setBrushColor(c); setIsEraser(false); Haptics.selectionAsync(); }}
+              style={[styles.colorDot, { backgroundColor: c },
+                brushColor === c && !isEraser && { borderWidth: 2.5, borderColor: "#fff" },
+                c === "#FFFFFF" && { borderWidth: 1, borderColor: "rgba(255,255,255,0.3)" },
               ]} scale={0.88} />
           ))}
-        </View>
-
-        {/* Zoom indicator */}
-        <Text style={[styles.zoomLabel, { color: colors.mutedForeground }]}>
-          {Math.round(zoom * 100)}%
-        </Text>
+        </ScrollView>
+        {/* Zoom */}
+        <Text style={styles.zoomLabel}>{Math.round(zoom * 100)}%</Text>
       </View>
     </View>
   );
@@ -403,45 +435,51 @@ export function SketchCanvas({ showGrid = true, canvasRef }: SketchCanvasProps) 
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  canvas: { flex: 1 },
+  canvas: { flex: 1, backgroundColor: "#111111" },
 
-  toolbar: {
-    position: "absolute",
-    bottom: 16,
-    left: 16,
-    right: 16,
-    borderRadius: 20,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: 12,
-    gap: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 10,
+  sidebar: {
+    position: "absolute", left: 10, top: "20%",
+    backgroundColor: "rgba(30,30,30,0.92)",
+    borderRadius: 18, borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(255,255,255,0.10)",
+    paddingVertical: 8, paddingHorizontal: 6,
+    alignItems: "center", gap: 4,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 12, elevation: 8, zIndex: 10,
   },
-
-  toolRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  toolBtn: {
-    width: 38, height: 38, borderRadius: 12,
+  sideBtn: {
+    width: 38, height: 38, borderRadius: 11,
     alignItems: "center", justifyContent: "center",
-    backgroundColor: "transparent",
+    borderWidth: 1, borderColor: "transparent",
   },
-  divider: { width: StyleSheet.hairlineWidth, height: 24, marginHorizontal: 2 },
+  sideDivider: {
+    width: 24, height: StyleSheet.hairlineWidth,
+    backgroundColor: "rgba(255,255,255,0.15)", marginVertical: 3,
+  },
 
-  sizeRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  bottomBar: {
+    position: "absolute", bottom: 16, left: 60, right: 16,
+    backgroundColor: "rgba(20,20,20,0.92)",
+    borderRadius: 18, borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(255,255,255,0.10)",
+    padding: 10, gap: 8,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 12, elevation: 8,
+  },
+  sizesRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   sizeBtn: {
-    width: 32, height: 32, borderRadius: 10,
+    width: 30, height: 30, borderRadius: 9,
     alignItems: "center", justifyContent: "center",
     borderWidth: 1, borderColor: "transparent",
   },
   sizeDot: {},
-
-  colorRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
-  colorBtn: {
-    width: 26, height: 26, borderRadius: 13,
-    borderWidth: 1, borderColor: "transparent",
+  colorScroll: { flexGrow: 0 },
+  colorDot: {
+    width: 24, height: 24, borderRadius: 12,
+    marginRight: 6, borderWidth: 1, borderColor: "transparent",
   },
-
-  zoomLabel: { fontSize: 10, fontWeight: "700", textAlign: "right" },
+  zoomLabel: {
+    fontSize: 10, fontWeight: "700",
+    color: "rgba(255,255,255,0.4)", textAlign: "right",
+  },
 });
