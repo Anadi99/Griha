@@ -37,7 +37,7 @@ export function useToast() {
 const VARIANT_CONFIG: Record<ToastVariant, { icon: string; color: string; bg: string; darkBg: string }> = {
   success: { icon: "check-circle", color: "#16A34A", bg: "#F0FDF4",  darkBg: "#0F2D1A" },
   error:   { icon: "x-circle",     color: "#DC2626", bg: "#FEF2F2",  darkBg: "#2D1515" },
-  info:    { icon: "info",          color: "#E02020", bg: "#FFF5F5",  darkBg: "#1A0505" },
+  info:    { icon: "info", color: "#8B5E3C", bg: "#F5EDE3", darkBg: "#2D1F12" },
 };
 
 const DURATION = 2600;

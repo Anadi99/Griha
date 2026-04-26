@@ -6,12 +6,12 @@ import { useColors } from "@/hooks/useColors";
 import { ScalePress } from "@/components/ScalePress";
 
 const ROOM_TYPES: Array<{ type: Room["type"]; label: string; icon: string; color: string }> = [
-  { type: "bedroom",     label: "Bedroom", icon: "moon",      color: "#E02020" },
-  { type: "living_room", label: "Living",  icon: "tv",        color: "#7C3AED" },
-  { type: "kitchen",     label: "Kitchen", icon: "coffee",    color: "#EA580C" },
-  { type: "bathroom",    label: "Bath",    icon: "droplet",   color: "#0284C7" },
-  { type: "office",      label: "Office",  icon: "briefcase", color: "#059669" },
-  { type: "dining_room", label: "Dining",  icon: "users",     color: "#DB2777" },
+  { type: "bedroom",     label: "Bedroom", icon: "moon",      color: "#C084FC" },
+  { type: "living_room", label: "Living",  icon: "tv",        color: "#38BDF8" },
+  { type: "kitchen",     label: "Kitchen", icon: "coffee",    color: "#FB923C" },
+  { type: "bathroom",    label: "Bath",    icon: "droplet",   color: "#34D399" },
+  { type: "office",      label: "Office",  icon: "briefcase", color: "#6366F1" },
+  { type: "dining_room", label: "Dining",  icon: "users",     color: "#FACC15" },
 ];
 
 interface Props { onClose?: () => void; }

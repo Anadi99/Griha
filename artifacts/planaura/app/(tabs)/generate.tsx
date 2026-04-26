@@ -13,11 +13,17 @@ import { generateLayouts, GeneratorInput, GeneratedLayout } from "@/lib/layout-g
 import { useToast } from "@/components/Toast";
 
 const ROOM_TYPES: Array<{ type: Room["type"]; label: string; color: string }> = [
-  { type:"bedroom",label:"Bedroom",color:"#E02020" },{ type:"living_room",label:"Living Room",color:"#7C3AED" },
-  { type:"kitchen",label:"Kitchen",color:"#EA580C" },{ type:"bathroom",label:"Bathroom",color:"#0284C7" },
-  { type:"office",label:"Office",color:"#059669" },{ type:"dining_room",label:"Dining Room",color:"#DB2777" },
+  { type:"bedroom",     label:"Bedroom",     color:"#C084FC" },
+  { type:"living_room", label:"Living Room", color:"#38BDF8" },
+  { type:"kitchen",     label:"Kitchen",     color:"#FB923C" },
+  { type:"bathroom",    label:"Bathroom",    color:"#34D399" },
+  { type:"office",      label:"Office",      color:"#6366F1" },
+  { type:"dining_room", label:"Dining Room", color:"#FACC15" },
 ];
-const ROOM_COLORS: Record<string,string> = { bedroom:"#E02020",kitchen:"#EA580C",bathroom:"#0284C7",living_room:"#7C3AED",office:"#059669",dining_room:"#DB2777" };
+const ROOM_COLORS: Record<string,string> = {
+  bedroom:"#C084FC", kitchen:"#FB923C", bathroom:"#34D399",
+  living_room:"#38BDF8", office:"#6366F1", dining_room:"#FACC15",
+};
 
 function MiniPlan({ layout }: { layout: GeneratedLayout }) {
   const colors = useColors();
@@ -28,7 +34,7 @@ function MiniPlan({ layout }: { layout: GeneratedLayout }) {
   return (
     <View style={[styles.miniPlan,{width:W,height:H,backgroundColor:colors.mutedBg,borderColor:colors.border}]}>
       {layout.rooms.map((room,i)=>{
-        const c=ROOM_COLORS[room.type]??"#E02020";
+        const c=ROOM_COLORS[room.type]??"#8B5E3C";
         return <View key={i} style={[styles.miniRoom,{left:4+room.x*s,top:4+room.y*s,width:Math.max(8,room.width*s),height:Math.max(8,room.height*s),backgroundColor:c+"30",borderColor:c}]}/>;
       })}
     </View>
@@ -146,7 +152,7 @@ const styles = StyleSheet.create({
   card:{borderRadius:16,borderWidth:StyleSheet.hairlineWidth,padding:16,gap:12},cardTitle:{fontSize:16,fontWeight:"800",letterSpacing:-0.3},cardSub:{fontSize:12,marginTop:-8},
   plotRow:{flexDirection:"row",alignItems:"flex-end",gap:12},plotInput:{flex:1,gap:6},plotLabel:{fontSize:12,fontWeight:"600"},plotField:{borderWidth:1.5,borderRadius:12,paddingHorizontal:14,paddingVertical:11,fontSize:18,fontWeight:"800",textAlign:"center"},plotX:{fontSize:20,fontWeight:"800",paddingBottom:10},
   roomRow:{flexDirection:"row",alignItems:"center",gap:10,paddingVertical:10,borderBottomWidth:StyleSheet.hairlineWidth},roomDot:{width:8,height:8,borderRadius:4},roomRowLabel:{flex:1,fontSize:14,fontWeight:"600"},counter:{flexDirection:"row",alignItems:"center",gap:8},counterBtn:{width:32,height:32,borderRadius:10,alignItems:"center",justifyContent:"center"},counterVal:{width:24,textAlign:"center",fontSize:16,fontWeight:"800"},
-  generateBtn:{flexDirection:"row",alignItems:"center",justifyContent:"center",gap:10,paddingVertical:16,borderRadius:16,shadowColor:"#E02020",shadowOffset:{width:0,height:6},shadowOpacity:0.28,shadowRadius:16,elevation:6},generateBtnText:{color:"#fff",fontSize:16,fontWeight:"800"},
+  generateBtn:{flexDirection:"row",alignItems:"center",justifyContent:"center",gap:10,paddingVertical:16,borderRadius:16,shadowColor:"#8B5E3C",shadowOffset:{width:0,height:6},shadowOpacity:0.28,shadowRadius:16,elevation:6},generateBtnText:{color:"#fff",fontSize:16,fontWeight:"800"},
   resultsTitle:{fontSize:17,fontWeight:"800",letterSpacing:-0.3},
   layoutCard:{borderRadius:16,borderWidth:StyleSheet.hairlineWidth,padding:16,gap:10},layoutName:{fontSize:16,fontWeight:"800",letterSpacing:-0.3},layoutDesc:{fontSize:12,lineHeight:18},layoutBadges:{flexDirection:"row",gap:8},badge:{paddingHorizontal:10,paddingVertical:4,borderRadius:8},badgeText:{fontSize:12,fontWeight:"700"},
   miniPlan:{borderRadius:10,borderWidth:StyleSheet.hairlineWidth,overflow:"hidden",position:"relative"},miniRoom:{position:"absolute",borderWidth:1,borderRadius:2},

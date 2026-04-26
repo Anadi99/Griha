@@ -16,8 +16,8 @@ import { formatCost, calculateCostEstimate } from "@/lib/cost-calculator";
 import { ScalePress } from "@/components/ScalePress";
 
 const ROOM_TYPE_COLORS: Record<string, string> = {
-  bedroom: "#E02020", kitchen: "#EA580C", bathroom: "#0284C7",
-  living_room: "#7C3AED", office: "#059669", dining_room: "#DB2777",
+  bedroom: "#C084FC", kitchen: "#FB923C", bathroom: "#34D399",
+  living_room: "#38BDF8", office: "#6366F1", dining_room: "#FACC15",
 };
 
 function SkeletonCard() {
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
   newBtn: {
     flexDirection: "row", alignItems: "center", gap: 6,
     paddingHorizontal: 16, paddingVertical: 13, borderRadius: 16,
-    shadowColor: "#E02020", shadowOffset: { width: 0, height: 3 },
+    shadowColor: "#8B5E3C", shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25, shadowRadius: 8, elevation: 4,
   },
   newBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" },
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
   emptyBtn: {
     flexDirection: "row", alignItems: "center", gap: 8,
     paddingHorizontal: 28, paddingVertical: 15, borderRadius: 16, marginTop: 4,
-    shadowColor: "#E02020", shadowOffset: { width: 0, height: 4 },
+    shadowColor: "#8B5E3C", shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.28, shadowRadius: 10, elevation: 5,
   },
   emptyBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },

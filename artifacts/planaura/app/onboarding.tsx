@@ -18,21 +18,21 @@ export const ONBOARDING_KEY = "planaura_onboarded_v1";
 const SLIDES = [
   {
     icon: "layout" as const,
-    accent: "#E02020",
+    accent: "#8B5E3C",
     title: "Design Your\nDream Space",
     subtitle: "Draw floor plans with a professional canvas. Drag, resize, and arrange rooms with precision.",
     tag: "Canvas Designer",
   },
   {
     icon: "compass" as const,
-    accent: "#7C3AED",
+    accent: "#6366F1",
     title: "Vastu Energy\nAnalysis",
     subtitle: "Get real-time Vastu scores and placement guidance. Optimize your space for positive energy flow.",
     tag: "Spatial Intelligence",
   },
   {
     icon: "trending-up" as const,
-    accent: "#059669",
+    accent: "#34D399",
     title: "Instant Cost\nEstimates",
     subtitle: "See live construction cost breakdowns across 3 tiers — from economy to premium finishes.",
     tag: "Cost Planner",
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 10,
     paddingVertical: 16, paddingHorizontal: 40,
     borderRadius: 18,
-    shadowColor: "#E02020", shadowOffset: { width: 0, height: 8 },
+    shadowColor: "#8B5E3C", shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3, shadowRadius: 20, elevation: 8,
     width: SW - 48,
     justifyContent: "center",

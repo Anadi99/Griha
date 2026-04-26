@@ -41,8 +41,8 @@ const ROOM_ICONS: Record<Room["type"], string> = {
 };
 
 const ROOM_COLORS: Record<Room["type"], string> = {
-  bedroom: "#E02020", kitchen: "#EA580C", bathroom: "#0284C7",
-  living_room: "#7C3AED", office: "#059669", dining_room: "#DB2777",
+  bedroom: "#C084FC", kitchen: "#FB923C", bathroom: "#34D399",
+  living_room: "#38BDF8", office: "#6366F1", dining_room: "#FACC15",
 };
 
 interface DrawRect { x: number; y: number; w: number; h: number }
@@ -138,7 +138,7 @@ const Minimap = memo(function Minimap({
       <Svg width={MINIMAP_W} height={MINIMAP_H}>
         {rooms.map((r) => {
           const { mx, my } = toMM(r.x, r.y);
-          const col = ROOM_COLORS[r.type] ?? "#E02020";
+          const col = ROOM_COLORS[r.type] ?? "#8B5E3C";
           return (
             <Rect key={r.id}
               x={mx} y={my}
@@ -153,7 +153,7 @@ const Minimap = memo(function Minimap({
           const vw = vpW * sc, vh = vpH * sc;
           return (
             <Rect x={vx} y={vy} width={Math.max(4, vw)} height={Math.max(4, vh)}
-              fill="none" stroke="#E02020" strokeWidth={1} strokeDasharray="3,2" rx={1} opacity={0.7} />
+              fill="none" stroke="#8B5E3C" strokeWidth={1} strokeDasharray="3,2" rx={1} opacity={0.7} />
           );
         })()}
       </Svg>
@@ -164,7 +164,7 @@ const Minimap = memo(function Minimap({
 /* ── Main Component ────────────────────────────────── */
 export function FloorPlanCanvas({
   activeTool, drawRoomType, showGrid, onRoomSelect, onRoomDrawn, canvasRef,
-  sketchColor = "#E02020", sketchSize = 4,
+  sketchColor = "#8B5E3C", sketchSize = 4,
 }: FloorPlanCanvasProps) {
   const colors = useColors();
   const store = useDesignerStore();
@@ -525,9 +525,9 @@ export function FloorPlanCanvas({
   const selectedId = store.selectedRoomId;
 
   // Theme-aware selection color
-  const SEL_COLOR = "#E02020";
-  const SEL_HANDLE_FILL = isDark ? "#1A0505" : "#FFFFFF";
-  const GUIDE_COLOR = "#E02020";
+  const SEL_COLOR = "#8B5E3C";
+  const SEL_HANDLE_FILL = isDark ? "#1A1008" : "#FFFFFF";
+  const GUIDE_COLOR = "#C4714A";
 
   /* ── Room elements ── */
   const roomEls = allRooms.map((room) => {
@@ -753,13 +753,13 @@ export function FloorPlanCanvas({
   const selectedRoom = selectedId ? store.currentPlan.rooms.find((r) => r.id === selectedId) : null;
 
   // Grid color — subtle, theme-aware
-  const gridColor = isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)";
-  const gridColorMain = isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.14)";
+  const gridColor = isDark ? "rgba(196,154,108,0.08)" : "rgba(139,94,60,0.07)";
+  const gridColorMain = isDark ? "rgba(196,154,108,0.16)" : "rgba(139,94,60,0.14)";
 
   return (
     <View
       ref={canvasRef}
-      style={[styles.container, { backgroundColor: isDark ? "#0A0A0A" : "#FAFAFA" }]}
+      style={[styles.container, { backgroundColor: isDark ? "#1A1008" : "#F5F0E8" }]}
       {...panResponder.panHandlers}
       onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
     >

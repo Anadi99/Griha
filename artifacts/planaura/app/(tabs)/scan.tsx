@@ -11,12 +11,12 @@ import { ScalePress } from "@/components/ScalePress";
 import { analyzeRoomScan, getQuestions, RoomType, Direction, RoomScanInput, RoomScanResult } from "@/lib/room-scan-engine";
 
 const ROOM_TYPES: Array<{ type: RoomType; label: string; icon: string; color: string }> = [
-  { type: "bedroom", label: "Bedroom", icon: "moon", color: "#E02020" },
-  { type: "living_room", label: "Living Room", icon: "tv", color: "#7C3AED" },
-  { type: "kitchen", label: "Kitchen", icon: "coffee", color: "#EA580C" },
-  { type: "bathroom", label: "Bathroom", icon: "droplet", color: "#0284C7" },
-  { type: "office", label: "Office", icon: "briefcase", color: "#059669" },
-  { type: "dining_room", label: "Dining Room", icon: "users", color: "#DB2777" },
+  { type: "bedroom",     label: "Bedroom",     icon: "moon",      color: "#C084FC" },
+  { type: "living_room", label: "Living Room", icon: "tv",        color: "#38BDF8" },
+  { type: "kitchen",     label: "Kitchen",     icon: "coffee",    color: "#FB923C" },
+  { type: "bathroom",    label: "Bathroom",    icon: "droplet",   color: "#34D399" },
+  { type: "office",      label: "Office",      icon: "briefcase", color: "#6366F1" },
+  { type: "dining_room", label: "Dining Room", icon: "users",     color: "#FACC15" },
 ];
 const DIRECTIONS: Direction[] = ["N","NE","E","SE","S","SW","W","NW"];
 const DIR_LABELS: Record<Direction, string> = { N:"North",NE:"North-East",E:"East",SE:"South-East",S:"South",SW:"South-West",W:"West",NW:"North-West" };
@@ -311,12 +311,12 @@ export default function ScanScreen() {
 
 const styles = StyleSheet.create({
   root:{flex:1},header:{overflow:"hidden"},headerInner:{paddingHorizontal:20,paddingBottom:8,flexDirection:"row",alignItems:"flex-end",justifyContent:"space-between"},headerTitle:{fontSize:28,fontWeight:"800",letterSpacing:-0.6},headerSub:{fontSize:13,marginTop:2},resetBtn:{flexDirection:"row",alignItems:"center",gap:6,paddingHorizontal:12,paddingVertical:8,borderRadius:12},resetBtnText:{fontSize:13,fontWeight:"600"},stepDots:{flexDirection:"row",gap:6,paddingHorizontal:20,paddingBottom:12,paddingTop:4},stepDot:{height:4,width:16,borderRadius:2},content:{padding:16,gap:14},
-  heroCard:{borderRadius:20,borderWidth:1,padding:24,alignItems:"center",gap:12},heroIcon:{width:64,height:64,borderRadius:20,alignItems:"center",justifyContent:"center",shadowColor:"#E02020",shadowOffset:{width:0,height:6},shadowOpacity:0.3,shadowRadius:12,elevation:6},heroTitle:{fontSize:22,fontWeight:"800",letterSpacing:-0.4},heroDesc:{fontSize:14,textAlign:"center",lineHeight:21},
-  photoBtn:{flexDirection:"row",alignItems:"center",justifyContent:"center",gap:10,paddingVertical:16,borderRadius:16,shadowColor:"#E02020",shadowOffset:{width:0,height:6},shadowOpacity:0.28,shadowRadius:16,elevation:6},photoBtnText:{color:"#fff",fontSize:16,fontWeight:"800"},galleryBtn:{flexDirection:"row",alignItems:"center",justifyContent:"center",gap:10,paddingVertical:14,borderRadius:16,borderWidth:1.5},galleryBtnText:{fontSize:15,fontWeight:"700"},
+  heroCard:{borderRadius:20,borderWidth:1,padding:24,alignItems:"center",gap:12},heroIcon:{width:64,height:64,borderRadius:20,alignItems:"center",justifyContent:"center",shadowColor:"#8B5E3C",shadowOffset:{width:0,height:6},shadowOpacity:0.3,shadowRadius:12,elevation:6},heroTitle:{fontSize:22,fontWeight:"800",letterSpacing:-0.4},heroDesc:{fontSize:14,textAlign:"center",lineHeight:21},
+  photoBtn:{flexDirection:"row",alignItems:"center",justifyContent:"center",gap:10,paddingVertical:16,borderRadius:16,shadowColor:"#8B5E3C",shadowOffset:{width:0,height:6},shadowOpacity:0.28,shadowRadius:16,elevation:6},photoBtnText:{color:"#fff",fontSize:16,fontWeight:"800"},galleryBtn:{flexDirection:"row",alignItems:"center",justifyContent:"center",gap:10,paddingVertical:14,borderRadius:16,borderWidth:1.5},galleryBtnText:{fontSize:15,fontWeight:"700"},
   infoCard:{borderRadius:16,borderWidth:StyleSheet.hairlineWidth,padding:16,gap:12},infoRow:{flexDirection:"row",alignItems:"flex-start",gap:10},infoIconWrap:{width:28,height:28,borderRadius:8,alignItems:"center",justifyContent:"center",marginTop:1},infoText:{flex:1,fontSize:13,lineHeight:19},
   photoPreview:{width:"100%",height:180,borderRadius:16},stepTitle:{fontSize:22,fontWeight:"800",letterSpacing:-0.4},stepSub:{fontSize:14,lineHeight:20,marginTop:-8},
   roomGrid:{flexDirection:"row",flexWrap:"wrap",gap:10},roomTypeBtn:{width:"47%",flexGrow:1,borderRadius:16,borderWidth:1.5,padding:16,alignItems:"center",gap:8},roomTypeIcon:{width:44,height:44,borderRadius:13,alignItems:"center",justifyContent:"center"},roomTypeLabel:{fontSize:13,fontWeight:"700",textAlign:"center"},
-  nextBtn:{flexDirection:"row",alignItems:"center",justifyContent:"center",gap:10,paddingVertical:16,borderRadius:16,shadowColor:"#E02020",shadowOffset:{width:0,height:6},shadowOpacity:0.28,shadowRadius:16,elevation:6},nextBtnText:{color:"#fff",fontSize:16,fontWeight:"800"},
+  nextBtn:{flexDirection:"row",alignItems:"center",justifyContent:"center",gap:10,paddingVertical:16,borderRadius:16,shadowColor:"#8B5E3C",shadowOffset:{width:0,height:6},shadowOpacity:0.28,shadowRadius:16,elevation:6},nextBtnText:{color:"#fff",fontSize:16,fontWeight:"800"},
   questionCard:{borderRadius:16,borderWidth:StyleSheet.hairlineWidth,padding:16,gap:14},questionHeader:{flexDirection:"row",alignItems:"flex-start",gap:10},questionNum:{width:26,height:26,borderRadius:8,alignItems:"center",justifyContent:"center",marginTop:1},questionNumText:{fontSize:12,fontWeight:"800"},questionLabel:{flex:1,fontSize:14,fontWeight:"600",lineHeight:20},
   dirGrid:{flexDirection:"row",flexWrap:"wrap",gap:8},dirBtn:{paddingHorizontal:10,paddingVertical:8,borderRadius:10,borderWidth:1.5,alignItems:"center",minWidth:72},dirCode:{fontSize:13,fontWeight:"800"},dirLabel:{fontSize:9,fontWeight:"500",marginTop:1},
   optionsRow:{flexDirection:"row",flexWrap:"wrap",gap:8},optionBtn:{paddingHorizontal:14,paddingVertical:10,borderRadius:12,borderWidth:1.5},optionBtnText:{fontSize:13,fontWeight:"600"},

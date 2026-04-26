@@ -16,8 +16,8 @@ import { formatCost } from "@/lib/cost-calculator";
 type InsightTab = "sunlight"|"airflow"|"boq"|"location";
 const HOURS: SunHour[] = [6,7,8,9,10,11,12,13,14,15,16,17,18];
 const HOUR_LABELS: Record<number,string> = {6:"6am",7:"7am",8:"8am",9:"9am",10:"10am",11:"11am",12:"12pm",13:"1pm",14:"2pm",15:"3pm",16:"4pm",17:"5pm",18:"6pm"};
-const TAG_COLORS: Record<string,string> = {"Morning Sun":"#D97706","Afternoon Sun":"#EA580C","All-Day Sun":"#16A34A","Low Light":"#737373","Hot Zone":"#DC2626"};
-const VENT_COLORS: Record<string,string> = {"Good Cross Ventilation":"#16A34A","Single Opening":"#D97706","Stagnant Air Zone":"#DC2626","Blocked Airflow":"#EA580C"};
+const TAG_COLORS: Record<string,string> = {"Morning Sun":"#D97706","Afternoon Sun":"#FB923C","All-Day Sun":"#34D399","Low Light":"#737373","Hot Zone":"#DC2626"};
+const VENT_COLORS: Record<string,string> = {"Good Cross Ventilation":"#34D399","Single Opening":"#D97706","Stagnant Air Zone":"#DC2626","Blocked Airflow":"#FB923C"};
 const ROOM_NAMES: Record<string,string> = {bedroom:"Bedroom",kitchen:"Kitchen",bathroom:"Bathroom",living_room:"Living Room",office:"Office",dining_room:"Dining Room"};
 
 export default function InsightsScreen() {
@@ -92,8 +92,8 @@ export default function InsightsScreen() {
         </>}
 
         {tab==="airflow"&&<>
-          <View style={[styles.scoreCard,{backgroundColor:"#0284C708",borderColor:"#0284C730"}]}>
-            <View style={[styles.scoreCircle,{borderColor:"#0284C7"}]}><Text style={[styles.scoreNum,{color:"#0284C7"}]}>{ventAnalysis.overallScore}</Text><Text style={[styles.scoreSub,{color:"#0284C780"}]}>/100</Text></View>
+          <View style={[styles.scoreCard,{backgroundColor:"#38BDF808",borderColor:"#38BDF830"}]}>
+            <View style={[styles.scoreCircle,{borderColor:"#38BDF8"}]}><Text style={[styles.scoreNum,{color:"#38BDF8"}]}>{ventAnalysis.overallScore}</Text><Text style={[styles.scoreSub,{color:"#38BDF880"}]}>/100</Text></View>
             <View style={{flex:1}}><Text style={[styles.scoreTitle,{color:colors.foreground}]}>Ventilation Score</Text><Text style={[styles.scoreDesc,{color:colors.mutedForeground}]}>{ventAnalysis.deadZones.length>0?`${ventAnalysis.deadZones.length} stagnant zone(s) detected`:"Airflow analyzed across all rooms"}</Text></View>
           </View>
           {rooms.length===0?Empty:ventAnalysis.rooms.map(vr=>{const room=rooms.find(r=>r.id===vr.roomId);if(!room)return null;const lc=VENT_COLORS[vr.label]??colors.muted;return(
@@ -152,7 +152,7 @@ export default function InsightsScreen() {
             </ScrollView>
           </View>}
           <View style={[styles.cityStats,{backgroundColor:colors.card,borderColor:colors.border}]}>
-            {[{l:"Climate",v:getClimateLabel(cityData.climate),c:getClimateColor(cityData.climate)},{l:"Avg Sun",v:`${cityData.avgSunHours}h/day`,c:"#D97706"},{l:"Avg Temp",v:`${cityData.avgTemp}°C`,c:"#EA580C"},{l:"Humidity",v:cityData.humidity,c:"#0284C7"}].map((s,i)=>(
+            {[{l:"Climate",v:getClimateLabel(cityData.climate),c:getClimateColor(cityData.climate)},{l:"Avg Sun",v:`${cityData.avgSunHours}h/day`,c:"#D97706"},{l:"Avg Temp",v:`${cityData.avgTemp}°C`,c:"#FB923C"},{l:"Humidity",v:cityData.humidity,c:"#38BDF8"}].map((s,i)=>(
               <View key={i} style={[styles.cityStat,{borderColor:colors.border}]}><Text style={[styles.cityStatLabel,{color:colors.mutedForeground}]}>{s.l}</Text><Text style={[styles.cityStatValue,{color:s.c}]}>{s.v}</Text></View>
             ))}
           </View>

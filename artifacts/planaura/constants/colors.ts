@@ -1,50 +1,54 @@
 /**
- * PlanAura Design Tokens
- * Theme: Red + White + Glassmorphism
- * Inspired by Apple/Linear — clean, premium, minimal
+ * Griha Design Tokens
+ * Theme: Brown + White — warm, premium, canvas-first
+ * Figma precision × Canva simplicity × Airbnb warmth
  */
 
 const colors = {
   light: {
     // Base
-    text: "#0A0A0A",
-    tint: "#E02020",
+    text: "#1C1008",
+    tint: "#8B5E3C",
 
-    background: "#FAFAFA",
-    foreground: "#0A0A0A",
+    background: "#FDFAF7",       // warm off-white — never cold
+    foreground: "#1C1008",       // deep warm black
+
+    // Canvas surface
+    canvas: "#F5F0E8",           // warm parchment — the drawing area
+    canvasBorder: "#E8DDD0",
 
     // Cards & surfaces
     card: "#FFFFFF",
-    cardForeground: "#0A0A0A",
+    cardForeground: "#1C1008",
     surface: "#FFFFFF",
-    surfaceElevated: "#F5F5F5",
+    surfaceElevated: "#FAF7F3",
 
-    // Glass surfaces (use with BlurView)
+    // Glass surfaces (BlurView)
     glass: "rgba(255,255,255,0.72)",
     glassBorder: "rgba(255,255,255,0.45)",
-    glassDark: "rgba(0,0,0,0.04)",
+    glassDark: "rgba(28,16,8,0.04)",
 
-    // Primary — Crimson Red
-    primary: "#E02020",
-    primaryDark: "#B91C1C",
-    primaryLight: "#F87171",
+    // Primary — Warm Brown
+    primary: "#8B5E3C",          // medium warm brown
+    primaryDark: "#6B4423",      // deep espresso
+    primaryLight: "#C49A6C",     // caramel
     primaryForeground: "#FFFFFF",
-    primaryMuted: "#FEF2F2",
-    primarySubtle: "#FFF5F5",
+    primaryMuted: "#F5EDE3",     // very light warm tint
+    primarySubtle: "#FBF7F3",
 
-    // Secondary — warm neutral
-    secondary: "#F5F5F5",
-    secondaryForeground: "#0A0A0A",
+    // Accent — Terracotta (CTA, highlights)
+    accent: "#C4714A",           // terracotta
+    accentForeground: "#FFFFFF",
+    accentMuted: "#FAEEE6",
+
+    // Secondary
+    secondary: "#F5EDE3",
+    secondaryForeground: "#6B4423",
 
     // Muted
-    muted: "#A3A3A3",
-    mutedForeground: "#737373",
-    mutedBg: "#F5F5F5",
-
-    // Accent — deep rose/pink for highlights
-    accent: "#F43F5E",
-    accentForeground: "#FFFFFF",
-    accentMuted: "#FFF1F2",
+    muted: "#A89080",
+    mutedForeground: "#7A6050",
+    mutedBg: "#F5EDE3",
 
     // Semantic
     destructive: "#DC2626",
@@ -64,58 +68,61 @@ const colors = {
     infoMuted: "#EFF6FF",
 
     // Borders
-    border: "#E5E5E5",
-    borderStrong: "#D4D4D4",
-    borderSubtle: "#F0F0F0",
-    input: "#F5F5F5",
+    border: "#E8DDD0",
+    borderStrong: "#D4C4B0",
+    borderSubtle: "#F0EAE0",
+    input: "#F5EDE3",
 
     // Shadows
-    shadow: "rgba(0,0,0,0.06)",
-    shadowMd: "rgba(0,0,0,0.10)",
-    shadowLg: "rgba(224,32,32,0.15)",
+    shadow: "rgba(139,94,60,0.08)",
+    shadowMd: "rgba(139,94,60,0.14)",
+    shadowLg: "rgba(139,94,60,0.20)",
 
-    // Room type colors
-    bedroom: "#E02020",
-    kitchen: "#EA580C",
-    bathroom: "#0284C7",
-    living_room: "#7C3AED",
-    office: "#059669",
-    dining_room: "#DB2777",
+    // Room type colors — soft, Canva-style
+    bedroom: "#C084FC",          // soft purple
+    kitchen: "#FB923C",          // warm orange
+    bathroom: "#34D399",         // mint
+    living_room: "#38BDF8",      // sky blue
+    office: "#6366F1",           // indigo
+    dining_room: "#FACC15",      // yellow
   },
 
   dark: {
-    text: "#FAFAFA",
-    tint: "#F87171",
+    text: "#F5EDE3",
+    tint: "#C49A6C",
 
-    background: "#0A0A0A",
-    foreground: "#FAFAFA",
+    background: "#120A04",       // deep walnut
+    foreground: "#F5EDE3",
 
-    card: "#141414",
-    cardForeground: "#FAFAFA",
-    surface: "#141414",
-    surfaceElevated: "#1C1C1C",
+    canvas: "#1A1008",           // dark parchment
+    canvasBorder: "#2D1F12",
 
-    glass: "rgba(20,20,20,0.75)",
-    glassBorder: "rgba(255,255,255,0.10)",
-    glassDark: "rgba(255,255,255,0.04)",
+    card: "#1E1208",
+    cardForeground: "#F5EDE3",
+    surface: "#1E1208",
+    surfaceElevated: "#261810",
 
-    primary: "#F87171",
-    primaryDark: "#EF4444",
-    primaryLight: "#FCA5A5",
-    primaryForeground: "#0A0A0A",
-    primaryMuted: "#2D1515",
-    primarySubtle: "#1F0F0F",
+    glass: "rgba(30,18,8,0.80)",
+    glassBorder: "rgba(196,154,108,0.15)",
+    glassDark: "rgba(245,237,227,0.04)",
 
-    secondary: "#1C1C1C",
-    secondaryForeground: "#FAFAFA",
+    primary: "#C49A6C",          // caramel in dark mode
+    primaryDark: "#A07848",
+    primaryLight: "#DDB98A",
+    primaryForeground: "#120A04",
+    primaryMuted: "#2D1F12",
+    primarySubtle: "#1E1208",
 
-    muted: "#525252",
-    mutedForeground: "#A3A3A3",
-    mutedBg: "#1C1C1C",
+    accent: "#D4956A",
+    accentForeground: "#120A04",
+    accentMuted: "#2D1A0E",
 
-    accent: "#FB7185",
-    accentForeground: "#0A0A0A",
-    accentMuted: "#2D1520",
+    secondary: "#2D1F12",
+    secondaryForeground: "#C49A6C",
+
+    muted: "#5C4030",
+    mutedForeground: "#A89080",
+    mutedBg: "#261810",
 
     destructive: "#EF4444",
     destructiveForeground: "#FFFFFF",
@@ -133,21 +140,21 @@ const colors = {
     infoForeground: "#FFFFFF",
     infoMuted: "#0F1D2D",
 
-    border: "#262626",
-    borderStrong: "#333333",
-    borderSubtle: "#1C1C1C",
-    input: "#1C1C1C",
+    border: "#2D1F12",
+    borderStrong: "#3D2A18",
+    borderSubtle: "#221508",
+    input: "#261810",
 
     shadow: "rgba(0,0,0,0.4)",
     shadowMd: "rgba(0,0,0,0.6)",
-    shadowLg: "rgba(248,113,113,0.12)",
+    shadowLg: "rgba(196,154,108,0.12)",
 
-    bedroom: "#F87171",
-    kitchen: "#FB923C",
-    bathroom: "#38BDF8",
-    living_room: "#A78BFA",
-    office: "#4ADE80",
-    dining_room: "#F472B6",
+    bedroom: "#D8B4FE",
+    kitchen: "#FDBA74",
+    bathroom: "#6EE7B7",
+    living_room: "#7DD3FC",
+    office: "#A5B4FC",
+    dining_room: "#FDE68A",
   },
 
   radius: 16,

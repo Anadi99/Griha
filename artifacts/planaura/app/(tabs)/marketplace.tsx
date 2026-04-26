@@ -163,8 +163,8 @@ export default function MarketplaceScreen() {
     <AnimCard index={index}>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.cardHead}>
-          <View style={[styles.iconBox, { backgroundColor: "#7C3AED18" }]}>
-            <Feather name="tool" size={20} color="#7C3AED" />
+          <View style={[styles.iconBox, { backgroundColor: "#6366F118" }]}>
+            <Feather name="tool" size={20} color="#6366F1" />
           </View>
           <View style={{ flex: 1 }}>
             <View style={styles.nameRow}>
@@ -178,10 +178,10 @@ export default function MarketplaceScreen() {
         <View style={styles.chipsRow}>
           <Chip text={`${item.completedProjects} projects`} color={colors.mutedForeground} bg={colors.mutedBg} />
           <Chip text={item.location} color={colors.mutedForeground} bg={colors.mutedBg} />
-          <Chip text={formatCost(item.averageProjectCost)} color="#7C3AED" bg="#7C3AED15" />
+          <Chip text={formatCost(item.averageProjectCost)} color="#6366F1" bg="#6366F115" />
         </View>
         <ScalePress onPress={handleContact} scale={0.97}>
-          <LinearGradient colors={["#7C3AED", "#6D28D9"]}
+          <LinearGradient colors={["#6366F1", "#4F46E5"]}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.actionBtn}>
             <Feather name="send" size={14} color="#fff" />
             <Text style={styles.actionBtnText}>Get Quote</Text>
@@ -195,8 +195,8 @@ export default function MarketplaceScreen() {
     <AnimCard index={index}>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.cardHead}>
-          <View style={[styles.iconBox, { backgroundColor: "#05966918" }]}>
-            <Feather name="package" size={20} color="#059669" />
+          <View style={[styles.iconBox, { backgroundColor: "#34D39918" }]}>
+            <Feather name="package" size={20} color="#34D399" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.name, { color: colors.foreground }]}>{item.name}</Text>
@@ -208,13 +208,13 @@ export default function MarketplaceScreen() {
         <View style={styles.chipsRow}>
           <Chip
             text={item.inStock ? "In Stock" : "Out of Stock"}
-            color={item.inStock ? "#059669" : colors.destructive}
-            bg={item.inStock ? "#05966915" : colors.destructiveMuted}
+            color={item.inStock ? "#34D399" : colors.destructive}
+            bg={item.inStock ? "#34D39915" : colors.destructiveMuted}
           />
-          <Chip text={`₹${item.pricePerUnit.toLocaleString("en-IN")}/${item.unit}`} color="#059669" bg="#05966915" />
+          <Chip text={`₹${item.pricePerUnit.toLocaleString("en-IN")}/${item.unit}`} color="#34D399" bg="#34D39915" />
         </View>
         <ScalePress onPress={handleContact} scale={0.97}>
-          <LinearGradient colors={["#059669", "#047857"]}
+          <LinearGradient colors={["#34D399", "#10B981"]}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.actionBtn}>
             <Feather name="shopping-cart" size={14} color="#fff" />
             <Text style={styles.actionBtnText}>Add to Quote</Text>
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
   actionBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 8, paddingVertical: 14, borderRadius: 16,
-    shadowColor: "#E02020", shadowOffset: { width: 0, height: 3 },
+    shadowColor: "#8B5E3C", shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2, shadowRadius: 8, elevation: 4,
   },
   actionBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" },

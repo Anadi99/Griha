@@ -167,16 +167,16 @@ export default function CompareScreen() {
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Score Overview</Text>
               <View style={styles.scoreBarsGroup}>
                 <Text style={[styles.scoreBarsLabel, { color: colors.primary }]}>Plan A — {mA.plan.name}</Text>
-                <ScoreBar value={mA.vastu} color="#E02020" label="Vastu" />
+                <ScoreBar value={mA.vastu} color="#8B5E3C" label="Vastu" />
                 <ScoreBar value={mA.sunlight} color="#D97706" label="Sunlight" />
-                <ScoreBar value={mA.ventilation} color="#0284C7" label="Airflow" />
+                <ScoreBar value={mA.ventilation} color="#38BDF8" label="Airflow" />
               </View>
               <View style={[styles.divider, { backgroundColor: colors.border }]} />
               <View style={styles.scoreBarsGroup}>
-                <Text style={[styles.scoreBarsLabel, { color: "#7C3AED" }]}>Plan B — {mB.plan.name}</Text>
-                <ScoreBar value={mB.vastu} color="#E02020" label="Vastu" />
+                <Text style={[styles.scoreBarsLabel, { color: "#6366F1" }]}>Plan B — {mB.plan.name}</Text>
+                <ScoreBar value={mB.vastu} color="#8B5E3C" label="Vastu" />
                 <ScoreBar value={mB.sunlight} color="#D97706" label="Sunlight" />
-                <ScoreBar value={mB.ventilation} color="#0284C7" label="Airflow" />
+                <ScoreBar value={mB.ventilation} color="#38BDF8" label="Airflow" />
               </View>
             </View>
 
@@ -184,7 +184,7 @@ export default function CompareScreen() {
               <View style={styles.tableHeader}>
                 <View style={{ flex: 2 }} />
                 <Text style={[styles.tableCol, { color: colors.primary }]}>Plan A</Text>
-                <Text style={[styles.tableCol, { color: "#7C3AED" }]}>Plan B</Text>
+                <Text style={[styles.tableCol, { color: "#6366F1" }]}>Plan B</Text>
               </View>
               <MetricRow label="Vastu Score" icon="compass" aVal={mA.vastu} bVal={mB.vastu} unit="/100" />
               <MetricRow label="Sunlight" icon="sun" aVal={mA.sunlight} bVal={mB.sunlight} unit="/100" />

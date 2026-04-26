@@ -20,33 +20,33 @@ const FEATURES = [
     icon: "layout" as const,
     label: "Canvas Designer",
     desc: "Draw rooms by dragging on a precision grid",
-    color: "#E02020",
-    bg: "#FEF2F2",
-    darkBg: "#2D1515",
+    color: "#8B5E3C",
+    bg: "#F5EDE3",
+    darkBg: "#2D1F12",
   },
   {
     icon: "compass" as const,
     label: "Vastu Analysis",
     desc: "Real-time energy scoring & placement advice",
-    color: "#7C3AED",
-    bg: "#F5F3FF",
-    darkBg: "#1E1040",
+    color: "#6366F1",
+    bg: "#EEF2FF",
+    darkBg: "#1E1B4B",
   },
   {
     icon: "trending-up" as const,
     label: "Cost Estimate",
     desc: "3-tier construction cost breakdown",
-    color: "#059669",
-    bg: "#F0FDF4",
+    color: "#34D399",
+    bg: "#ECFDF5",
     darkBg: "#0F2D1A",
   },
   {
     icon: "users" as const,
     label: "Marketplace",
     desc: "Architects, contractors & materials",
-    color: "#D97706",
-    bg: "#FFFBEB",
-    darkBg: "#2D1F05",
+    color: "#FB923C",
+    bg: "#FFF7ED",
+    darkBg: "#2D1A05",
   },
 ];
 
@@ -232,8 +232,8 @@ export default function HomeScreen() {
 
 function StatsContent({ colors }: { colors: ReturnType<typeof import("@/hooks/useColors").useColors> }) {  const STATS = [
     { value: "6", label: "Room Types", color: colors.primary },
-    { value: "∞", label: "Undo Steps", color: "#7C3AED" },
-    { value: "3", label: "Cost Tiers", color: "#059669" },
+    { value: "∞", label: "Undo Steps", color: "#6366F1" },
+    { value: "3", label: "Cost Tiers", color: "#34D399" },
   ];
   return (
     <>
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   ctaPrimary: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 10, paddingVertical: 16, borderRadius: 16,
-    shadowColor: "#E02020", shadowOffset: { width: 0, height: 6 },
+    shadowColor: "#8B5E3C", shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.28, shadowRadius: 16, elevation: 6,
   },
   ctaPrimaryText: { color: "#fff", fontSize: 16, fontWeight: "800", letterSpacing: -0.3 },

@@ -24,15 +24,15 @@ type DesignerMode = "rooms" | "sketch";
 const PANEL_HEIGHT = 420;
 
 const ROOM_TYPES: Array<{ type: Room["type"]; label: string; color: string }> = [
-  { type: "bedroom",     label: "Bed",     color: "#E02020" },
-  { type: "living_room", label: "Living",  color: "#7C3AED" },
-  { type: "kitchen",     label: "Kitchen", color: "#EA580C" },
-  { type: "bathroom",    label: "Bath",    color: "#0284C7" },
-  { type: "office",      label: "Office",  color: "#059669" },
-  { type: "dining_room", label: "Dining",  color: "#DB2777" },
+  { type: "bedroom",     label: "Bed",     color: "#C084FC" },
+  { type: "living_room", label: "Living",  color: "#38BDF8" },
+  { type: "kitchen",     label: "Kitchen", color: "#FB923C" },
+  { type: "bathroom",    label: "Bath",    color: "#34D399" },
+  { type: "office",      label: "Office",  color: "#6366F1" },
+  { type: "dining_room", label: "Dining",  color: "#FACC15" },
 ];
 
-const SKETCH_COLORS = ["#E02020","#0A0A0A","#7C3AED","#0284C7","#059669","#EA580C","#D97706","#DB2777"];
+const SKETCH_COLORS = ["#8B5E3C","#1C1008","#C4714A","#C084FC","#38BDF8","#34D399","#6366F1","#FB923C"];
 const SKETCH_SIZES = [2, 4, 8, 14];
 
 /* ── Toolbar button ── */
@@ -130,7 +130,7 @@ export default function DesignerScreen() {
   const [showRename, setShowRename] = useState(false);
   // Designer mode
   const [designerMode, setDesignerMode] = useState<DesignerMode>("rooms");
-  const [sketchColor, setSketchColor] = useState("#E02020");
+  const [sketchColor, setSketchColor] = useState("#8B5E3C");
   const [sketchSize, setSketchSize] = useState(4);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
   saveBtn: {
     flexDirection: "row", alignItems: "center", gap: 5,
     paddingHorizontal: 14, paddingVertical: 11, borderRadius: 14,
-    shadowColor: "#E02020", shadowOffset: { width: 0, height: 3 },
+    shadowColor: "#8B5E3C", shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25, shadowRadius: 8, elevation: 4,
   },
   saveBtnText: { color: "#fff", fontSize: 13, fontWeight: "700" },

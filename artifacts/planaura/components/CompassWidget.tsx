@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     position: "absolute", bottom: -8, alignSelf: "center",
     paddingHorizontal: 7, paddingVertical: 2,
     borderRadius: 6,
-    shadowColor: "#E02020", shadowOffset: { width: 0, height: 2 },
+    shadowColor: "#8B5E3C", shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.4, shadowRadius: 4, elevation: 3,
   },
   dirBadgeText: { fontSize: 9, fontWeight: "900", color: "#fff", letterSpacing: 0.5 },

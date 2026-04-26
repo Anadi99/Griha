@@ -88,9 +88,9 @@ function buildPath(pts: Point[]): string {
 
 /* ── Color palette ── */
 const COLORS = [
-  "#E02020", "#0A0A0A", "#FFFFFF", "#7C3AED",
-  "#0284C7", "#059669", "#EA580C", "#DB2777",
-  "#D97706", "#6B7280",
+  "#8B5E3C", "#1C1008", "#FFFFFF", "#C4714A",
+  "#C084FC", "#38BDF8", "#34D399", "#6366F1",
+  "#FB923C", "#FACC15",
 ];
 
 const BRUSH_SIZES = [2, 4, 8, 14, 22];
@@ -109,7 +109,7 @@ export function SketchCanvas({ showGrid = true, canvasRef }: SketchCanvasProps) 
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [livePoints, setLivePoints] = useState<Point[]>([]);
   const [tool, setTool] = useState<SketchTool>("brush");
-  const [brushColor, setBrushColor] = useState("#E02020");
+  const [brushColor, setBrushColor] = useState("#8B5E3C");
   const [brushSize, setBrushSize] = useState(4);
   const [zoom, setZoom] = useState(1);
   const [panX, setPanX] = useState(0);
@@ -121,7 +121,7 @@ export function SketchCanvas({ showGrid = true, canvasRef }: SketchCanvasProps) 
   const panXRef = useRef(0);
   const panYRef = useRef(0);
   const toolRef = useRef<SketchTool>("brush");
-  const colorRef = useRef("#E02020");
+  const colorRef = useRef("#8B5E3C");
   const sizeRef = useRef(4);
   const isDrawing = useRef(false);
   const isPinching = useRef(false);
@@ -247,7 +247,7 @@ export function SketchCanvas({ showGrid = true, canvasRef }: SketchCanvasProps) 
           id: `s_${Date.now()}`,
           points: optimized,
           color: toolRef.current === "eraser"
-            ? (isDark ? "#0A0A0A" : "#FAFAFA")
+            ? (isDark ? "#1A1008" : "#F5F0E8")
             : colorRef.current,
           width: toolRef.current === "eraser" ? sizeRef.current * 3 : sizeRef.current,
           isEraser: toolRef.current === "eraser",
@@ -275,8 +275,8 @@ export function SketchCanvas({ showGrid = true, canvasRef }: SketchCanvasProps) 
   const gSpacing = G_PX * zoom;
   const offX = ((panX % gSpacing) + gSpacing) % gSpacing;
   const offY = ((panY % gSpacing) + gSpacing) % gSpacing;
-  const gridColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
-  const gridColorMain = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)";
+  const gridColor = isDark ? "rgba(196,154,108,0.08)" : "rgba(139,94,60,0.07)";
+  const gridColorMain = isDark ? "rgba(196,154,108,0.16)" : "rgba(139,94,60,0.14)";
 
   const livePath = buildPath(livePoints);
 
@@ -285,7 +285,7 @@ export function SketchCanvas({ showGrid = true, canvasRef }: SketchCanvasProps) 
       {/* Canvas */}
       <View
         ref={canvasRef}
-        style={[styles.canvas, { backgroundColor: isDark ? "#0A0A0A" : "#FAFAFA" }]}
+        style={[styles.canvas, { backgroundColor: isDark ? "#1A1008" : "#F5F0E8" }]}
         {...panResponder.panHandlers}
         onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
       >
@@ -328,7 +328,7 @@ export function SketchCanvas({ showGrid = true, canvasRef }: SketchCanvasProps) 
           {/* Live stroke */}
           {livePath ? (
             <Path d={livePath}
-              stroke={tool === "eraser" ? (isDark ? "#0A0A0A" : "#FAFAFA") : brushColor}
+              stroke={tool === "eraser" ? (isDark ? "#1A1008" : "#F5F0E8") : brushColor}
               strokeWidth={(tool === "eraser" ? brushSize * 3 : brushSize) * zoom}
               fill="none"
               strokeLinecap="round"
