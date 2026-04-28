@@ -16,6 +16,9 @@ import {
 import { formatCost } from "@/lib/cost-calculator";
 import { ScalePress } from "@/components/ScalePress";
 
+const SKY = "#38BDF8";
+const INDIGO = "#818CF8";
+
 type Tab = "architects" | "contractors" | "materials";
 
 const TABS: Array<{ key: Tab; label: string; icon: "pen-tool" | "tool" | "package" }> = [
@@ -24,30 +27,63 @@ const TABS: Array<{ key: Tab; label: string; icon: "pen-tool" | "tool" | "packag
   { key: "materials",   label: "Materials",   icon: "package" },
 ];
 
-function SkeletonCard() {
-  const colors = useColors();
-  const shimmer = useRef(new Animated.Value(0)).current;
+/* ── Obsidian glass card ── */
+function GlassCard({ children, index }: { children: React.ReactNode; index: number }) {
+  const isDark = useColorScheme() === "dark";
+  const isIOS = Platform.OS === "ios";
+  const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.loop(Animated.sequence([
-      Animated.timing(shimmer, { toValue: 1, duration: 800, useNativeDriver: true }),
-      Animated.timing(shimmer, { toValue: 0, duration: 800, useNativeDriver: true }),
-    ])).start();
+    Animated.spring(anim, { toValue: 1, tension: 100, friction: 12, delay: index * 55, useNativeDriver: true }).start();
   }, []);
-  const opacity = shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0.7] });
   return (
-    <Animated.View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, opacity }]}>
-      <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
-        <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: colors.mutedBg }} />
-        <View style={{ flex: 1, gap: 8 }}>
-          <View style={{ height: 14, width: "55%", borderRadius: 7, backgroundColor: colors.mutedBg }} />
-          <View style={{ height: 10, width: "40%", borderRadius: 5, backgroundColor: colors.mutedBg }} />
-        </View>
+    <Animated.View style={{
+      opacity: anim,
+      transform: [
+        { translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) },
+        { scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) },
+      ],
+    }}>
+      <View style={[
+        styles.card,
+        isDark
+          ? { backgroundColor: "rgba(15,23,42,0.5)", borderColor: "rgba(255,255,255,0.07)" }
+          : { backgroundColor: "#FFFFFF", borderColor: "rgba(0,0,0,0.07)" },
+      ]}>
+        {isDark && isIOS && <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />}
+        <View style={styles.cardInner}>{children}</View>
       </View>
-      <View style={{ height: 42, borderRadius: 12, backgroundColor: colors.mutedBg }} />
     </Animated.View>
   );
 }
 
+function SkeletonCard() {
+  const isDark = useColorScheme() === "dark";
+  const shimmer = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(Animated.sequence([
+      Animated.timing(shimmer, { toValue: 1, duration: 900, useNativeDriver: true }),
+      Animated.timing(shimmer, { toValue: 0, duration: 900, useNativeDriver: true }),
+    ])).start();
+  }, []);
+  const opacity = shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.6] });
+  const bg = isDark ? "rgba(255,255,255,0.06)" : "#E2E8F0";
+  return (
+    <Animated.View style={[styles.card, {
+      backgroundColor: isDark ? "rgba(15,23,42,0.4)" : "#FFFFFF",
+      borderColor: isDark ? "rgba(255,255,255,0.06)" : "#E2E8F0",
+      opacity,
+    }]}>
+      <View style={{ flexDirection: "row", gap: 12, alignItems: "center", padding: 16 }}>
+        <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: bg }} />
+        <View style={{ flex: 1, gap: 8 }}>
+          <View style={{ height: 14, width: "55%", borderRadius: 7, backgroundColor: bg }} />
+          <View style={{ height: 10, width: "40%", borderRadius: 5, backgroundColor: bg }} />
+        </View>
+      </View>
+      <View style={{ height: 42, margin: 16, marginTop: 0, borderRadius: 12, backgroundColor: bg }} />
+    </Animated.View>
+  );
+}
 function AnimCard({ children, index }: { children: React.ReactNode; index: number }) {
   const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -130,108 +166,100 @@ export default function MarketplaceScreen() {
   };
 
   const renderArchitect = ({ item, index }: { item: Architect; index: number }) => (
-    <AnimCard index={index}>
-      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.cardHead}>
-          <Avatar initials={item.avatar} color={colors.primary} />
-          <View style={{ flex: 1 }}>
-            <View style={styles.nameRow}>
-              <Text style={[styles.name, { color: colors.foreground }]}>{item.name}</Text>
-              {item.verified && <Feather name="check-circle" size={13} color="#2563EB" />}
-            </View>
-            <Text style={[styles.sub, { color: colors.mutedForeground }]}>{item.specialization.join(" · ")}</Text>
+    <GlassCard index={index}>
+      <View style={styles.cardHead}>
+        <Avatar initials={item.avatar} color={SKY} />
+        <View style={{ flex: 1 }}>
+          <View style={styles.nameRow}>
+            <Text style={[styles.name, { color: isDark ? "#FFFFFF" : "#0F172A" }]}>{item.name}</Text>
+            {item.verified && <Feather name="check-circle" size={13} color={SKY} />}
           </View>
-          <StarRating rating={item.rating} />
+          <Text style={[styles.sub, { color: isDark ? "rgba(255,255,255,0.4)" : "#64748B" }]}>{item.specialization.join(" · ")}</Text>
         </View>
-        <View style={styles.chipsRow}>
-          <Chip text={`${item.experience}y exp`} color={colors.mutedForeground} bg={colors.mutedBg} />
-          <Chip text={item.location} color={colors.mutedForeground} bg={colors.mutedBg} />
-          <Chip text={`₹${item.hourlyRate.toLocaleString("en-IN")}/hr`} color={colors.primary} bg={colors.primaryMuted} />
-        </View>
-        <ScalePress onPress={handleContact} scale={0.97}>
-          <LinearGradient colors={[colors.primary, colors.primaryDark]}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.actionBtn}>
-            <Feather name="message-square" size={14} color="#fff" />
-            <Text style={styles.actionBtnText}>Contact</Text>
-          </LinearGradient>
-        </ScalePress>
+        <StarRating rating={item.rating} />
       </View>
-    </AnimCard>
+      <View style={styles.chipsRow}>
+        <Chip text={`${item.experience}y exp`} color={isDark ? "rgba(255,255,255,0.5)" : "#64748B"} bg={isDark ? "rgba(255,255,255,0.06)" : "#F1F5F9"} />
+        <Chip text={item.location} color={isDark ? "rgba(255,255,255,0.5)" : "#64748B"} bg={isDark ? "rgba(255,255,255,0.06)" : "#F1F5F9"} />
+        <Chip text={`₹${item.hourlyRate.toLocaleString("en-IN")}/hr`} color={SKY} bg="rgba(56,189,248,0.12)" />
+      </View>
+      <ScalePress onPress={handleContact} scale={0.97}>
+        <LinearGradient colors={[SKY, "#0284C7"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.actionBtn}>
+          <Feather name="message-square" size={14} color="#00354A" />
+          <Text style={[styles.actionBtnText, { color: "#00354A" }]}>Contact</Text>
+        </LinearGradient>
+      </ScalePress>
+    </GlassCard>
   );
 
   const renderContractor = ({ item, index }: { item: Contractor; index: number }) => (
-    <AnimCard index={index}>
-      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.cardHead}>
-          <View style={[styles.iconBox, { backgroundColor: "#6366F118" }]}>
-            <Feather name="tool" size={20} color="#6366F1" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <View style={styles.nameRow}>
-              <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1}>{item.name}</Text>
-              {item.verified && <Feather name="check-circle" size={13} color="#2563EB" />}
-            </View>
-            <Text style={[styles.sub, { color: colors.mutedForeground }]}>{item.specialization.join(" · ")}</Text>
-          </View>
-          <StarRating rating={item.rating} />
+    <GlassCard index={index}>
+      <View style={styles.cardHead}>
+        <View style={[styles.iconBox, { backgroundColor: "rgba(129,140,248,0.12)" }]}>
+          <Feather name="tool" size={20} color={INDIGO} />
         </View>
-        <View style={styles.chipsRow}>
-          <Chip text={`${item.completedProjects} projects`} color={colors.mutedForeground} bg={colors.mutedBg} />
-          <Chip text={item.location} color={colors.mutedForeground} bg={colors.mutedBg} />
-          <Chip text={formatCost(item.averageProjectCost)} color="#6366F1" bg="#6366F115" />
+        <View style={{ flex: 1 }}>
+          <View style={styles.nameRow}>
+            <Text style={[styles.name, { color: isDark ? "#FFFFFF" : "#0F172A" }]} numberOfLines={1}>{item.name}</Text>
+            {item.verified && <Feather name="check-circle" size={13} color={SKY} />}
+          </View>
+          <Text style={[styles.sub, { color: isDark ? "rgba(255,255,255,0.4)" : "#64748B" }]}>{item.specialization.join(" · ")}</Text>
         </View>
-        <ScalePress onPress={handleContact} scale={0.97}>
-          <LinearGradient colors={["#6366F1", "#4F46E5"]}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.actionBtn}>
-            <Feather name="send" size={14} color="#fff" />
-            <Text style={styles.actionBtnText}>Get Quote</Text>
-          </LinearGradient>
-        </ScalePress>
+        <StarRating rating={item.rating} />
       </View>
-    </AnimCard>
+      <View style={styles.chipsRow}>
+        <Chip text={`${item.completedProjects} projects`} color={isDark ? "rgba(255,255,255,0.5)" : "#64748B"} bg={isDark ? "rgba(255,255,255,0.06)" : "#F1F5F9"} />
+        <Chip text={item.location} color={isDark ? "rgba(255,255,255,0.5)" : "#64748B"} bg={isDark ? "rgba(255,255,255,0.06)" : "#F1F5F9"} />
+        <Chip text={formatCost(item.averageProjectCost)} color={INDIGO} bg="rgba(129,140,248,0.12)" />
+      </View>
+      <ScalePress onPress={handleContact} scale={0.97}>
+        <LinearGradient colors={[INDIGO, "#6366F1"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.actionBtn}>
+          <Feather name="send" size={14} color="#fff" />
+          <Text style={styles.actionBtnText}>Get Quote</Text>
+        </LinearGradient>
+      </ScalePress>
+    </GlassCard>
   );
 
   const renderMaterial = ({ item, index }: { item: Material; index: number }) => (
-    <AnimCard index={index}>
-      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.cardHead}>
-          <View style={[styles.iconBox, { backgroundColor: "#34D39918" }]}>
-            <Feather name="package" size={20} color="#34D399" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.name, { color: colors.foreground }]}>{item.name}</Text>
-            <Text style={[styles.sub, { color: colors.mutedForeground }]}>{item.category} · {item.supplier}</Text>
-          </View>
-          <StarRating rating={item.rating} />
+    <GlassCard index={index}>
+      <View style={styles.cardHead}>
+        <View style={[styles.iconBox, { backgroundColor: "rgba(52,211,153,0.12)" }]}>
+          <Feather name="package" size={20} color="#34D399" />
         </View>
-        <Text style={[styles.materialDesc, { color: colors.mutedForeground }]}>{item.description}</Text>
-        <View style={styles.chipsRow}>
-          <Chip
-            text={item.inStock ? "In Stock" : "Out of Stock"}
-            color={item.inStock ? "#34D399" : colors.destructive}
-            bg={item.inStock ? "#34D39915" : colors.destructiveMuted}
-          />
-          <Chip text={`₹${item.pricePerUnit.toLocaleString("en-IN")}/${item.unit}`} color="#34D399" bg="#34D39915" />
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.name, { color: isDark ? "#FFFFFF" : "#0F172A" }]}>{item.name}</Text>
+          <Text style={[styles.sub, { color: isDark ? "rgba(255,255,255,0.4)" : "#64748B" }]}>{item.category} · {item.supplier}</Text>
         </View>
-        <ScalePress onPress={handleContact} scale={0.97}>
-          <LinearGradient colors={["#34D399", "#10B981"]}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.actionBtn}>
-            <Feather name="shopping-cart" size={14} color="#fff" />
-            <Text style={styles.actionBtnText}>Add to Quote</Text>
-          </LinearGradient>
-        </ScalePress>
+        <StarRating rating={item.rating} />
       </View>
-    </AnimCard>
+      <Text style={[styles.materialDesc, { color: isDark ? "rgba(255,255,255,0.4)" : "#64748B" }]}>{item.description}</Text>
+      <View style={styles.chipsRow}>
+        <Chip
+          text={item.inStock ? "In Stock" : "Out of Stock"}
+          color={item.inStock ? "#34D399" : "#FF6B6B"}
+          bg={item.inStock ? "rgba(52,211,153,0.12)" : "rgba(255,107,107,0.12)"}
+        />
+        <Chip text={`₹${item.pricePerUnit.toLocaleString("en-IN")}/${item.unit}`} color="#34D399" bg="rgba(52,211,153,0.12)" />
+      </View>
+      <ScalePress onPress={handleContact} scale={0.97}>
+        <LinearGradient colors={["#34D399", "#10B981"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.actionBtn}>
+          <Feather name="shopping-cart" size={14} color="#fff" />
+          <Text style={styles.actionBtnText}>Add to Quote</Text>
+        </LinearGradient>
+      </ScalePress>
+    </GlassCard>
   );
 
   const data: any[] = activeTab === "architects" ? architects
     : activeTab === "contractors" ? contractors : MOCK_MATERIALS;
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
+    <View style={[styles.root, { backgroundColor: isDark ? "#0D1322" : colors.background }]}>
+      {isDark && <View style={styles.glow} pointerEvents="none" />}
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad + 8 },
-        isIOS ? {} : { backgroundColor: colors.card, borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth }]}>
+        isIOS ? {} : { backgroundColor: isDark ? "rgba(13,19,34,0.95)" : colors.card, borderBottomColor: isDark ? "rgba(255,255,255,0.06)" : colors.border, borderBottomWidth: StyleSheet.hairlineWidth }]}>
         {isIOS && <BlurView intensity={80} tint={isDark ? "dark" : "extraLight"} style={StyleSheet.absoluteFill} />}
         <View style={styles.headerInner}>
           <Text style={[styles.headerTitle, { color: colors.foreground }]}>Explore</Text>
@@ -281,6 +309,11 @@ export default function MarketplaceScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  glow: {
+    position: "absolute", top: -60, right: -60,
+    width: 280, height: 280, borderRadius: 140,
+    backgroundColor: "#38BDF8", opacity: 0.04,
+  },
   header: { overflow: "hidden", borderBottomWidth: StyleSheet.hairlineWidth },
   headerInner: { paddingHorizontal: 20, paddingBottom: 14 },
   headerTitle: { fontSize: 28, fontWeight: "800", letterSpacing: -0.6 },
@@ -307,10 +340,11 @@ const styles = StyleSheet.create({
   comingSoonText: { flex: 1, fontSize: 13, lineHeight: 19 },
 
   card: {
-    borderRadius: 18, borderWidth: StyleSheet.hairlineWidth, padding: 16, gap: 12,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+    borderRadius: 20, borderWidth: 1, overflow: "hidden",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 12, elevation: 4,
   },
+  cardInner: { padding: 16, gap: 12 },
   cardHead: { flexDirection: "row", alignItems: "center", gap: 12 },
   avatar: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center" },
   avatarText: { fontSize: 15, fontWeight: "800" },
