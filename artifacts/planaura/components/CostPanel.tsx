@@ -9,7 +9,7 @@ const TIERS: Array<"basic" | "standard" | "premium"> = ["basic", "standard", "pr
 
 const TIER_META: Record<string, { icon: string; color: string }> = {
   basic:    { icon: "home", color: "#737373" },
-  standard: { icon: "home", color: "#8B5E3C" },
+  standard: { icon: "home", color: "#38BDF8" },
   premium:  { icon: "star", color: "#D97706" },
 };
 
@@ -19,7 +19,7 @@ const BREAKDOWN_CONFIG = [
   { key: "electrical", label: "Electrical", pct: 15, icon: "zap"     as const },
   { key: "plumbing",   label: "Plumbing",   pct: 15, icon: "droplet" as const },
 ];
-const BREAKDOWN_COLORS = ["#8B5E3C", "#6366F1", "#D97706", "#38BDF8"];
+const BREAKDOWN_COLORS = ["#38BDF8", "#6366F1", "#D97706", "#38BDF8"];
 
 /* ── Animated progress bar ─────────────────────────── */
 function AnimBar({ pct, color, value }: { pct: number; color: string; value: number }) {

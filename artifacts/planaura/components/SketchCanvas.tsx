@@ -34,10 +34,10 @@ interface Stroke {
 
 /* ── Color palette — 16 colors ── */
 export const SKETCH_PALETTE = [
-  "#FFFFFF", "#000000", "#8B5E3C", "#C4714A",
-  "#C084FC", "#38BDF8", "#34D399", "#6366F1",
-  "#FB923C", "#FACC15", "#F472B6", "#EF4444",
-  "#22C55E", "#3B82F6", "#A78BFA", "#94A3B8",
+  "#FFFFFF", "#38BDF8", "#818CF8", "#A5B4FC",
+  "#6EE7B7", "#FDBA74", "#FDE68A", "#FB7185",
+  "#000000", "#94A3B8", "#C4B5FD", "#7DD3FC",
+  "#34D399", "#FB923C", "#FACC15", "#F472B6",
 ];
 
 /* ── Brush configs ── */

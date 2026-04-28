@@ -41,8 +41,8 @@ const ROOM_ICONS: Record<Room["type"], string> = {
 };
 
 const ROOM_COLORS: Record<Room["type"], string> = {
-  bedroom: "#C084FC", kitchen: "#FB923C", bathroom: "#34D399",
-  living_room: "#38BDF8", office: "#6366F1", dining_room: "#FACC15",
+  bedroom: "#A5B4FC", kitchen: "#FDBA74", bathroom: "#6EE7B7",
+  living_room: "#7DD3FC", office: "#C4B5FD", dining_room: "#FDE68A",
 };
 
 interface DrawRect { x: number; y: number; w: number; h: number }
@@ -138,7 +138,7 @@ const Minimap = memo(function Minimap({
       <Svg width={MINIMAP_W} height={MINIMAP_H}>
         {rooms.map((r) => {
           const { mx, my } = toMM(r.x, r.y);
-          const col = ROOM_COLORS[r.type] ?? "#8B5E3C";
+          const col = ROOM_COLORS[r.type] ?? "#38BDF8";
           return (
             <Rect key={r.id}
               x={mx} y={my}
@@ -153,7 +153,7 @@ const Minimap = memo(function Minimap({
           const vw = vpW * sc, vh = vpH * sc;
           return (
             <Rect x={vx} y={vy} width={Math.max(4, vw)} height={Math.max(4, vh)}
-              fill="none" stroke="#8B5E3C" strokeWidth={1} strokeDasharray="3,2" rx={1} opacity={0.7} />
+              fill="none" stroke="#38BDF8" strokeWidth={1} strokeDasharray="3,2" rx={1} opacity={0.7} />
           );
         })()}
       </Svg>
@@ -164,7 +164,7 @@ const Minimap = memo(function Minimap({
 /* ── Main Component ────────────────────────────────── */
 export function FloorPlanCanvas({
   activeTool, drawRoomType, showGrid, onRoomSelect, onRoomDrawn, canvasRef,
-  sketchColor = "#8B5E3C", sketchSize = 4,
+  sketchColor = "#38BDF8", sketchSize = 4,
 }: FloorPlanCanvasProps) {
   const colors = useColors();
   const store = useDesignerStore();
@@ -525,9 +525,9 @@ export function FloorPlanCanvas({
   const selectedId = store.selectedRoomId;
 
   // Theme-aware selection color
-  const SEL_COLOR = "#8B5E3C";
-  const SEL_HANDLE_FILL = isDark ? "#1A1008" : "#FFFFFF";
-  const GUIDE_COLOR = "#C4714A";
+  const SEL_COLOR = isDark ? "#38BDF8" : "#0284C7";
+  const SEL_HANDLE_FILL = isDark ? "#0A0F1D" : "#FFFFFF";
+  const GUIDE_COLOR = isDark ? "#38BDF8" : "#0284C7";
 
   /* ── Room elements ── */
   const roomEls = allRooms.map((room) => {
@@ -657,7 +657,7 @@ export function FloorPlanCanvas({
         {(isBeingDragged || (activeDrag?.type === "resize" && activeDrag.room.id === room.id)) && (
           <G>
             <Rect x={rx+rw/2-36} y={ry+rh/2-14} width={72} height={28} rx={8}
-              fill={isDark ? "#1A0505" : "#0A0A0A"} opacity={0.90} />
+              fill={isDark ? "#0A0F1D" : "#0A0A0A"} opacity={0.90} />
             <SvgText x={rx+rw/2} y={ry+rh/2+5} textAnchor="middle"
               fontSize={12} fill="#fff" fontWeight="800">
               {room.width}×{room.height}
@@ -727,7 +727,7 @@ export function FloorPlanCanvas({
         {pw > 60 && ph > 40 && (
           <G>
             <Rect x={px+pw/2-36} y={py+ph/2-14} width={72} height={28} rx={8}
-              fill={isDark ? "#1A0505" : "#0A0A0A"} opacity={0.88} />
+              fill={isDark ? "#0A0F1D" : "#0A0A0A"} opacity={0.88} />
             <SvgText x={px+pw/2} y={py+ph/2+5} textAnchor="middle"
               fontSize={12} fill="#fff" fontWeight="800">
               {snW}×{snH} ft
@@ -753,13 +753,13 @@ export function FloorPlanCanvas({
   const selectedRoom = selectedId ? store.currentPlan.rooms.find((r) => r.id === selectedId) : null;
 
   // Grid color — subtle, theme-aware
-  const gridColor = isDark ? "rgba(196,154,108,0.08)" : "rgba(139,94,60,0.07)";
-  const gridColorMain = isDark ? "rgba(196,154,108,0.16)" : "rgba(139,94,60,0.14)";
+  const gridColor = isDark ? "rgba(56,189,248,0.05)" : "rgba(15,23,42,0.06)";
+  const gridColorMain = isDark ? "rgba(56,189,248,0.10)" : "rgba(15,23,42,0.12)";
 
   return (
     <View
       ref={canvasRef}
-      style={[styles.container, { backgroundColor: isDark ? "#1A1008" : "#F5F0E8" }]}
+      style={[styles.container, { backgroundColor: isDark ? "#0A0F1D" : "#F1F5F9" }]}
       {...panResponder.panHandlers}
       onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
     >

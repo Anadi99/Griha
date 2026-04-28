@@ -140,7 +140,7 @@ export function CompassWidget({ selectedDirection, size = 72 }: CompassWidgetPro
 
         {/* Center pivot */}
         <Circle cx={cx} cy={cy} r={5}
-          fill={isDark ? "#1A0505" : "#fff"}
+          fill={isDark ? "#0A0F1D" : "#fff"}
           stroke={colors.primary} strokeWidth={1.5} />
         <Circle cx={cx} cy={cy} r={2} fill={colors.primary} />
       </Svg>
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     position: "absolute", bottom: -8, alignSelf: "center",
     paddingHorizontal: 7, paddingVertical: 2,
     borderRadius: 6,
-    shadowColor: "#8B5E3C", shadowOffset: { width: 0, height: 2 },
+    shadowColor: "#38BDF8", shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.4, shadowRadius: 4, elevation: 3,
   },
   dirBadgeText: { fontSize: 9, fontWeight: "900", color: "#fff", letterSpacing: 0.5 },

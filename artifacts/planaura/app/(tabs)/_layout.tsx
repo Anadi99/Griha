@@ -1,152 +1,121 @@
 /**
- * Tab Layout — 5-tab premium nav bar
- * Center Home button elevated + animated
- * Sliding indicator animation
- * Hidden tabs: scan, sketch, insights, generate, compare (accessible from Home)
+ * Griha — Magnetic Dock Tab Bar
+ * Obsidian Ocean design system
+ * Floating pill, scale animation, sky blue active state
  */
-import { BlurView } from "expo-blur";
-import { Tabs, usePathname } from "expo-router";
+import { Tabs } from "expo-router";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useRef, useEffect } from "react";
 import {
   Platform, StyleSheet, View, Text, Animated,
-  useColorScheme, TouchableOpacity, Dimensions,
+  TouchableOpacity, Dimensions, useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useColors } from "@/hooks/useColors";
+import { BlurView } from "expo-blur";
 
 const { width: SW } = Dimensions.get("window");
 
 const TABS = [
-  { name: "marketplace", label: "Explore",  icon: "compass"    as const },
-  { name: "plans",       label: "Plans",    icon: "folder"     as const },
-  { name: "index",       label: "Home",     icon: "home"       as const, isCenter: true },
-  { name: "designer",    label: "Design",   icon: "edit-2"     as const },
-  { name: "account",     label: "Account",  icon: "user"       as const },
+  { name: "index",       label: "Home",    icon: "home"       as const },
+  { name: "designer",    label: "Design",  icon: "edit-2"     as const },
+  { name: "plans",       label: "Plans",   icon: "folder"     as const },
+  { name: "marketplace", label: "Explore", icon: "compass"    as const },
+  { name: "account",     label: "Account", icon: "user"       as const },
 ];
 
-const BAR_HEIGHT_IOS = 84;
-const BAR_HEIGHT_ANDROID = 68;
-const CENTER_SIZE = 58;
+const SKY = "#38BDF8";
+const INACTIVE = "rgba(255,255,255,0.35)";
+const DOCK_BG_IOS = undefined; // BlurView handles it
+const DOCK_BG_ANDROID = "rgba(13,19,34,0.92)";
 
-function CustomTabBar({ state, descriptors, navigation }: any) {
-  const colors = useColors();
+function MagneticDock({ state, navigation }: any) {
+  const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === "dark";
   const isIOS = Platform.OS === "ios";
-  const insets = useSafeAreaInsets();
-  const botPad = insets.bottom;
-  const barHeight = isIOS ? BAR_HEIGHT_IOS : BAR_HEIGHT_ANDROID;
 
-  // Sliding indicator animation
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnims = useRef(TABS.map(() => new Animated.Value(1))).current;
+  // Scale animations per tab
+  const scaleAnims = useRef(TABS.map((_, i) =>
+    new Animated.Value(i === 0 ? 1.2 : 1)
+  )).current;
 
-  // Find active tab index among our 5 visible tabs
-  const pathname = state.routes[state.index]?.name ?? "index";
-  const activeIdx = TABS.findIndex((t) => t.name === pathname);
-  const safeActiveIdx = activeIdx === -1 ? 2 : activeIdx; // default to Home
+  const activeIdx = (() => {
+    const name = state.routes[state.index]?.name;
+    const idx = TABS.findIndex((t) => t.name === name);
+    return idx === -1 ? 0 : idx;
+  })();
 
   useEffect(() => {
-    const tabW = SW / TABS.length;
-    Animated.spring(slideAnim, {
-      toValue: safeActiveIdx * tabW + tabW / 2 - 16,
-      tension: 180, friction: 14, useNativeDriver: true,
-    }).start();
-
-    // Scale active tab icon
     scaleAnims.forEach((anim, i) => {
       Animated.spring(anim, {
-        toValue: i === safeActiveIdx ? 1.15 : 1,
-        tension: 200, friction: 10, useNativeDriver: true,
+        toValue: i === activeIdx ? 1.22 : 1,
+        tension: 220, friction: 10, useNativeDriver: true,
       }).start();
     });
-  }, [safeActiveIdx]);
+  }, [activeIdx]);
 
-  const handlePress = (tabName: string, idx: number) => {
-    const route = state.routes.find((r: any) => r.name === tabName);
+  const handlePress = (name: string) => {
+    const route = state.routes.find((r: any) => r.name === name);
     if (!route) return;
-    const isFocused = state.index === state.routes.indexOf(route);
-    if (!isFocused) {
-      navigation.navigate(tabName);
+    if (state.routes[state.index]?.name !== name) {
+      navigation.navigate(name);
     }
   };
 
+  const botPad = insets.bottom;
+
   return (
-    <View style={[
-      styles.barContainer,
-      { height: barHeight + botPad, paddingBottom: botPad },
-    ]}>
-      {/* Blur / solid background */}
-      {isIOS ? (
-        <BlurView
-          intensity={85}
-          tint={isDark ? "dark" : "extraLight"}
-          style={StyleSheet.absoluteFill}
-        />
-      ) : (
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.card }]} />
-      )}
+    <View style={[styles.dockOuter, { paddingBottom: botPad + 8 }]}>
+      {/* Ambient glow behind dock */}
+      <View style={styles.dockGlow} pointerEvents="none" />
 
-      {/* Top border */}
-      <View style={[styles.topBorder, { backgroundColor: colors.border }]} />
+      {/* Dock pill */}
+      <View style={styles.dockPill}>
+        {isIOS ? (
+          <BlurView
+            intensity={60}
+            tint="dark"
+            style={[StyleSheet.absoluteFill, styles.dockBlur]}
+          />
+        ) : (
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: DOCK_BG_ANDROID, borderRadius: 999 }]} />
+        )}
 
-      {/* Sliding indicator */}
-      <Animated.View style={[
-        styles.indicator,
-        { backgroundColor: colors.primary, transform: [{ translateX: slideAnim }] },
-      ]} />
+        {/* Border */}
+        <View style={[StyleSheet.absoluteFill, styles.dockBorder]} pointerEvents="none" />
 
-      {/* Tab buttons */}
-      <View style={styles.tabRow}>
-        {TABS.map((tab, idx) => {
-          const isActive = idx === safeActiveIdx;
-          const isCenter = tab.isCenter;
-
-          if (isCenter) {
+        {/* Tabs */}
+        <View style={styles.dockRow}>
+          {TABS.map((tab, idx) => {
+            const isActive = idx === activeIdx;
             return (
               <TouchableOpacity
                 key={tab.name}
-                style={styles.centerTabWrap}
-                onPress={() => handlePress(tab.name, idx)}
-                activeOpacity={0.85}
+                onPress={() => handlePress(tab.name)}
+                style={styles.dockItem}
+                activeOpacity={0.7}
               >
                 <Animated.View style={[
-                  styles.centerBtn,
-                  { backgroundColor: colors.primary, transform: [{ scale: scaleAnims[idx] }] },
+                  styles.dockIconWrap,
+                  isActive && styles.dockIconActive,
+                  { transform: [{ scale: scaleAnims[idx] }] },
                 ]}>
-                  <Feather name={tab.icon} size={24} color="#fff" />
+                  <Feather
+                    name={tab.icon}
+                    size={22}
+                    color={isActive ? SKY : INACTIVE}
+                  />
                 </Animated.View>
-                <Text style={[styles.centerLabel, { color: isActive ? colors.primary : colors.muted }]}>
+                <Text style={[
+                  styles.dockLabel,
+                  { color: isActive ? SKY : "rgba(255,255,255,0.3)" },
+                  isActive && styles.dockLabelActive,
+                ]}>
                   {tab.label}
                 </Text>
               </TouchableOpacity>
             );
-          }
-
-          return (
-            <TouchableOpacity
-              key={tab.name}
-              style={styles.tabItem}
-              onPress={() => handlePress(tab.name, idx)}
-              activeOpacity={0.7}
-            >
-              <Animated.View style={{ transform: [{ scale: scaleAnims[idx] }] }}>
-                <Feather
-                  name={tab.icon}
-                  size={21}
-                  color={isActive ? colors.primary : colors.muted}
-                />
-              </Animated.View>
-              <Text style={[
-                styles.tabLabel,
-                { color: isActive ? colors.primary : colors.muted },
-                isActive && styles.tabLabelActive,
-              ]}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+          })}
+        </View>
       </View>
     </View>
   );
@@ -155,85 +124,73 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
 export default function TabLayout() {
   return (
     <Tabs
-      tabBar={(props) => <CustomTabBar {...props} />}
+      tabBar={(props) => <MagneticDock {...props} />}
       screenOptions={{ headerShown: false }}
     >
-      {/* Visible tabs */}
       <Tabs.Screen name="index" />
       <Tabs.Screen name="designer" />
       <Tabs.Screen name="plans" />
       <Tabs.Screen name="marketplace" />
       <Tabs.Screen name="account" />
-
-      {/* Hidden tabs — accessible from Home screen feature grid */}
-      <Tabs.Screen name="scan"        options={{ href: null }} />
-      <Tabs.Screen name="insights"    options={{ href: null }} />
-      <Tabs.Screen name="generate"    options={{ href: null }} />
-      <Tabs.Screen name="compare"     options={{ href: null }} />
+      {/* Hidden */}
+      <Tabs.Screen name="scan"     options={{ href: null }} />
+      <Tabs.Screen name="insights" options={{ href: null }} />
+      <Tabs.Screen name="generate" options={{ href: null }} />
+      <Tabs.Screen name="compare"  options={{ href: null }} />
     </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
-  barContainer: {
-    position: "absolute",
-    bottom: 0, left: 0, right: 0,
+  dockOuter: {
+    position: "absolute", bottom: 0, left: 0, right: 0,
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  dockGlow: {
+    position: "absolute", bottom: 0, left: "10%", right: "10%", height: 80,
+    backgroundColor: SKY,
+    opacity: 0.06,
+    borderRadius: 999,
+    transform: [{ scaleX: 1.4 }],
+  },
+  dockPill: {
+    width: "100%",
+    maxWidth: 380,
+    borderRadius: 999,
     overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 24,
+    elevation: 16,
   },
-  topBorder: {
-    height: StyleSheet.hairlineWidth,
-    position: "absolute", top: 0, left: 0, right: 0,
+  dockBlur: { borderRadius: 999 },
+  dockBorder: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
   },
-  indicator: {
-    position: "absolute",
-    top: 0,
-    width: 32, height: 3,
-    borderRadius: 2,
-  },
-  tabRow: {
+  dockRow: {
     flexDirection: "row",
-    alignItems: "flex-end",
-    paddingTop: 8,
-    paddingHorizontal: 4,
-    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
   },
-  tabItem: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 3,
-    paddingBottom: 4,
+  dockItem: {
+    flex: 1, alignItems: "center", gap: 3,
   },
-  tabLabel: {
-    fontSize: 10,
-    fontWeight: "600",
-    letterSpacing: 0.1,
+  dockIconWrap: {
+    width: 40, height: 40,
+    alignItems: "center", justifyContent: "center",
+    borderRadius: 12,
   },
-  tabLabelActive: {
+  dockIconActive: {
+    backgroundColor: "rgba(56,189,248,0.12)",
+  },
+  dockLabel: {
+    fontSize: 10, fontWeight: "600", letterSpacing: 0.2,
+  },
+  dockLabelActive: {
     fontWeight: "700",
-  },
-  centerTabWrap: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 3,
-    paddingBottom: 4,
-    marginTop: -18,  // lifts the center button above the bar
-  },
-  centerBtn: {
-    width: CENTER_SIZE,
-    height: CENTER_SIZE,
-    borderRadius: CENTER_SIZE / 2,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#8B5E3C",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    elevation: 10,
-  },
-  centerLabel: {
-    fontSize: 10,
-    fontWeight: "600",
   },
 });

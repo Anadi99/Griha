@@ -18,14 +18,14 @@ export const ONBOARDING_KEY = "planaura_onboarded_v1";
 const SLIDES = [
   {
     icon: "layout" as const,
-    accent: "#8B5E3C",
+    accent: "#38BDF8",
     title: "Design Your\nDream Space",
     subtitle: "Draw floor plans with a professional canvas. Drag, resize, and arrange rooms with precision.",
     tag: "Canvas Designer",
   },
   {
     icon: "compass" as const,
-    accent: "#6366F1",
+    accent: "#818CF8",
     title: "Vastu Energy\nAnalysis",
     subtitle: "Get real-time Vastu scores and placement guidance. Optimize your space for positive energy flow.",
     tag: "Spatial Intelligence",
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 10,
     paddingVertical: 16, paddingHorizontal: 40,
     borderRadius: 18,
-    shadowColor: "#8B5E3C", shadowOffset: { width: 0, height: 8 },
+    shadowColor: "#38BDF8", shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3, shadowRadius: 20, elevation: 8,
     width: SW - 48,
     justifyContent: "center",

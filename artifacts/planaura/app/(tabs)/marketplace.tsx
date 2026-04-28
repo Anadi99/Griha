@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
   actionBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 8, paddingVertical: 14, borderRadius: 16,
-    shadowColor: "#8B5E3C", shadowOffset: { width: 0, height: 3 },
+    shadowColor: "#38BDF8", shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2, shadowRadius: 8, elevation: 4,
   },
   actionBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" },

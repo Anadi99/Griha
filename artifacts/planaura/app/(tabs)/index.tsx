@@ -6,6 +6,7 @@ import {
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
@@ -13,15 +14,41 @@ import { useDesignerStore } from "@/lib/store";
 import { ScalePress } from "@/components/ScalePress";
 
 const { width: SW } = Dimensions.get("window");
+const SKY = "#38BDF8";
+const INDIGO = "#818CF8";
 
-/* ── Tools grid — all hidden-tab features ── */
 const TOOLS = [
-  { icon: "camera"      as const, label: "Room Scan",  desc: "Photo Vastu analysis",        color: "#38BDF8", route: "/(tabs)/scan"     },
-  { icon: "sun"         as const, label: "Sunlight",   desc: "Light & airflow insights",    color: "#D97706", route: "/(tabs)/insights" },
-  { icon: "cpu"         as const, label: "Generate",   desc: "AI layout from requirements", color: "#6366F1", route: "/(tabs)/generate" },
+  { icon: "camera"      as const, label: "Room Scan",  desc: "AI photo analysis",           color: SKY,     route: "/(tabs)/scan"     },
+  { icon: "sun"         as const, label: "Sunlight",   desc: "Light & airflow simulation",  color: "#FBBF24", route: "/(tabs)/insights" },
+  { icon: "cpu"         as const, label: "Generate",   desc: "AI layout from requirements", color: INDIGO,  route: "/(tabs)/generate" },
   { icon: "columns"     as const, label: "Compare",    desc: "Side-by-side plan analysis",  color: "#34D399", route: "/(tabs)/compare"  },
   { icon: "bar-chart-2" as const, label: "Insights",   desc: "BOQ & location intel",        color: "#FB923C", route: "/(tabs)/insights" },
 ];
+
+function GlassCard({ children, style }: { children: React.ReactNode; style?: any }) {
+  const isDark = useColorScheme() === "dark";
+  const isIOS = Platform.OS === "ios";
+  if (isDark && isIOS) {
+    return (
+      <BlurView intensity={40} tint="dark" style={[glassStyles.card, style]}>
+        <View style={glassStyles.border} pointerEvents="none" />
+        {children}
+      </BlurView>
+    );
+  }
+  return (
+    <View style={[glassStyles.cardSolid, style, isDark && glassStyles.cardDark]}>
+      {children}
+    </View>
+  );
+}
+
+const glassStyles = StyleSheet.create({
+  card: { borderRadius: 24, overflow: "hidden" },
+  border: { ...StyleSheet.absoluteFillObject, borderRadius: 24, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" },
+  cardSolid: { borderRadius: 24, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E2E8F0" },
+  cardDark: { backgroundColor: "rgba(21,27,43,0.85)", borderColor: "rgba(255,255,255,0.08)" },
+});
 
 function ToolCard({ icon, label, desc, color, route, index }: typeof TOOLS[0] & { index: number }) {
   const colors = useColors();
@@ -32,26 +59,27 @@ function ToolCard({ icon, label, desc, color, route, index }: typeof TOOLS[0] & 
   useEffect(() => {
     Animated.spring(anim, {
       toValue: 1, tension: 80, friction: 10,
-      delay: 300 + index * 60, useNativeDriver: true,
+      delay: 200 + index * 55, useNativeDriver: true,
     }).start();
   }, []);
 
   return (
     <Animated.View style={{
       opacity: anim,
-      transform: [
-        { translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) },
-        { scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) },
-      ],
+      transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }],
       width: "47%", flexGrow: 1,
     }}>
-      <ScalePress onPress={() => { Haptics.selectionAsync(); router.push(route as any); }} scale={0.96}>
-        <View style={[styles.toolCard, {
-          backgroundColor: isDark ? color + "18" : color + "12",
-          borderColor: color + "25",
-        }]}>
-          <View style={[styles.toolIcon, { backgroundColor: color + "20" }]}>
-            <Feather name={icon} size={18} color={color} />
+      <ScalePress onPress={() => { Haptics.selectionAsync(); router.push(route as any); }} scale={0.95}>
+        <View style={[
+          styles.toolCard,
+          isDark
+            ? { backgroundColor: "rgba(21,27,43,0.8)", borderColor: "rgba(255,255,255,0.07)" }
+            : { backgroundColor: "#FFFFFF", borderColor: "#E2E8F0" },
+        ]}>
+          {/* Active indicator line */}
+          <View style={[styles.toolAccent, { backgroundColor: color }]} />
+          <View style={[styles.toolIcon, { backgroundColor: color + "18" }]}>
+            <Feather name={icon} size={17} color={color} />
           </View>
           <Text style={[styles.toolLabel, { color: colors.foreground }]}>{label}</Text>
           <Text style={[styles.toolDesc, { color: colors.mutedForeground }]}>{desc}</Text>
@@ -67,6 +95,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const store = useDesignerStore();
   const isDark = useColorScheme() === "dark";
+  const isIOS = Platform.OS === "ios";
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   const heroAnim = useRef(new Animated.Value(0)).current;
@@ -74,7 +103,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     store.loadSavedPlans();
-    Animated.stagger(80, [
+    Animated.stagger(100, [
       Animated.spring(heroAnim, { toValue: 1, tension: 70, friction: 9, useNativeDriver: true }),
       Animated.spring(bodyAnim, { toValue: 1, tension: 70, friction: 9, useNativeDriver: true }),
     ]).start();
@@ -89,104 +118,127 @@ export default function HomeScreen() {
   const savedCount = store.savedPlans.length;
   const hasCurrent = !!store.currentPlan;
 
-  const fadeUp = (anim: Animated.Value, offset = 24) => ({
+  const fadeUp = (anim: Animated.Value, offset = 20) => ({
     opacity: anim,
     transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [offset, 0] }) }],
   });
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+    <View style={[styles.root, { backgroundColor: isDark ? "#0D1322" : colors.background }]}>
+      {/* Ambient glow blobs */}
+      {isDark && (
+        <>
+          <View style={styles.glowTopRight} pointerEvents="none" />
+          <View style={styles.glowBottomLeft} pointerEvents="none" />
+        </>
+      )}
 
-        {/* ── Hero ── */}
-        <View style={{ paddingTop: topPad }}>
-          <LinearGradient
-            colors={isDark ? ["#2D1F12", "#120A04"] : ["#FBF5EE", "#FDFAF7"]}
-            style={styles.heroGradient}
-          >
-            <View style={[styles.decCircle1, { backgroundColor: colors.primary + "10" }]} pointerEvents="none" />
-            <View style={[styles.decCircle2, { backgroundColor: colors.accent + "08" }]} pointerEvents="none" />
-
-            <Animated.View style={[styles.heroContent, fadeUp(heroAnim, 32)]}>
-              <View style={[styles.logoMark, { backgroundColor: colors.primary, shadowColor: colors.primary }]}>
-                <Feather name="home" size={26} color="#fff" />
-              </View>
-              <Text style={[styles.heroTitle, { color: colors.foreground }]}>Griha</Text>
-              <Text style={[styles.heroTagline, { color: colors.mutedForeground }]}>
-                Design · Analyze · Build
-              </Text>
-              {savedCount > 0 && (
-                <View style={[styles.savedBadge, { backgroundColor: colors.primaryMuted, borderColor: colors.primary + "25" }]}>
-                  <Feather name="folder" size={11} color={colors.primary} />
-                  <Text style={[styles.savedBadgeText, { color: colors.primary }]}>
-                    {savedCount} saved plan{savedCount > 1 ? "s" : ""}
-                  </Text>
-                </View>
-              )}
-            </Animated.View>
-          </LinearGradient>
-        </View>
-
-        {/* ── Body ── */}
-        <Animated.View style={[styles.body, fadeUp(bodyAnim, 20)]}>
-
-          {/* Primary CTA */}
-          <ScalePress onPress={handleStart} scale={0.97}>
-            <LinearGradient
-              colors={[colors.primary, colors.primaryDark]}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-              style={styles.ctaPrimary}
-            >
-              <Feather name={hasCurrent ? "play" : "edit-3"} size={18} color="#fff" />
-              <Text style={styles.ctaPrimaryText}>
-                {hasCurrent ? "Continue Designing" : "Start Designing"}
-              </Text>
-            </LinearGradient>
-          </ScalePress>
-
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Header ── */}
+        <Animated.View style={[styles.header, { paddingTop: topPad + 16 }, fadeUp(heroAnim, 24)]}>
+          <View>
+            <Text style={[styles.appLabel, { color: isDark ? SKY : colors.primary }]}>
+              SPATIAL DESIGN
+            </Text>
+            <Text style={[styles.appName, { color: colors.foreground }]}>Griha</Text>
+          </View>
           {savedCount > 0 && (
-            <ScalePress
-              onPress={() => router.push("/(tabs)/plans")}
-              style={[styles.ctaSecondary, { backgroundColor: colors.card, borderColor: colors.border }]}
-              scale={0.97}
-            >
-              <Feather name="folder" size={16} color={colors.primary} />
-              <Text style={[styles.ctaSecondaryText, { color: colors.primary }]}>My Saved Plans</Text>
-            </ScalePress>
+            <View style={[styles.badge, { backgroundColor: isDark ? "rgba(56,189,248,0.12)" : colors.primaryMuted, borderColor: isDark ? "rgba(56,189,248,0.25)" : colors.primary + "30" }]}>
+              <Feather name="folder" size={11} color={isDark ? SKY : colors.primary} />
+              <Text style={[styles.badgeText, { color: isDark ? SKY : colors.primary }]}>
+                {savedCount} plan{savedCount > 1 ? "s" : ""}
+              </Text>
+            </View>
           )}
+        </Animated.View>
 
-          {/* Stats strip */}
-          <View style={[styles.statsStrip, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        {/* ── Hero metric card ── */}
+        <Animated.View style={[styles.body, fadeUp(bodyAnim, 16)]}>
+          <GlassCard style={styles.heroCard}>
+            <View style={styles.heroCardInner}>
+              <View>
+                <Text style={[styles.metricLabel, { color: isDark ? "rgba(255,255,255,0.4)" : colors.mutedForeground }]}>
+                  VASTU SCORE
+                </Text>
+                <Text style={[styles.metricValue, { color: isDark ? "#FFFFFF" : colors.foreground }]}>
+                  {store.currentPlan ? "—" : "—"}
+                  <Text style={[styles.metricUnit, { color: isDark ? SKY + "80" : colors.primary + "80" }]}>/100</Text>
+                </Text>
+              </View>
+              <ScalePress onPress={handleStart} scale={0.96}>
+                <LinearGradient
+                  colors={isDark ? [SKY, "#0284C7"] : [colors.primary, colors.primaryDark]}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                  style={styles.ctaBtn}
+                >
+                  <Feather name={hasCurrent ? "play" : "edit-3"} size={16} color={isDark ? "#00354A" : "#fff"} />
+                  <Text style={[styles.ctaBtnText, { color: isDark ? "#00354A" : "#fff" }]}>
+                    {hasCurrent ? "Continue" : "Start Design"}
+                  </Text>
+                </LinearGradient>
+              </ScalePress>
+            </View>
+
+            {/* Mini graph decoration */}
+            <View style={styles.graphRow}>
+              {[40, 55, 45, 70, 60, 80, 75, 90].map((h, i) => (
+                <View key={i} style={[
+                  styles.graphBar,
+                  {
+                    height: h * 0.5,
+                    backgroundColor: i === 7
+                      ? (isDark ? SKY : colors.primary)
+                      : (isDark ? "rgba(56,189,248,0.2)" : colors.primary + "20"),
+                  },
+                ]} />
+              ))}
+            </View>
+          </GlassCard>
+
+          {/* ── Stats row ── */}
+          <View style={styles.statsRow}>
             {[
-              { value: "6", label: "Room Types", color: colors.primary },
-              { value: "∞", label: "Undo Steps", color: "#6366F1" },
-              { value: "3", label: "Cost Tiers",  color: "#34D399" },
-            ].map((s, i, arr) => (
-              <React.Fragment key={s.label}>
-                <View style={styles.statItem}>
-                  <Text style={[styles.statValue, { color: s.color }]}>{s.value}</Text>
-                  <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>{s.label}</Text>
-                </View>
-                {i < arr.length - 1 && <View style={[styles.statDivider, { backgroundColor: colors.border }]} />}
-              </React.Fragment>
+              { value: savedCount.toString(), label: "Plans", color: isDark ? SKY : colors.primary },
+              { value: "6",  label: "Room Types", color: isDark ? INDIGO : colors.accent },
+              { value: "3",  label: "Cost Tiers",  color: isDark ? "#34D399" : colors.success },
+            ].map((s, i) => (
+              <GlassCard key={s.label} style={styles.statCard}>
+                <Text style={[styles.statValue, { color: s.color }]}>{s.value}</Text>
+                <Text style={[styles.statLabel, { color: isDark ? "rgba(255,255,255,0.4)" : colors.mutedForeground }]}>
+                  {s.label}
+                </Text>
+              </GlassCard>
             ))}
           </View>
 
-          {/* Tools grid */}
-          <Text style={[styles.sectionLabel, { color: colors.foreground }]}>Tools</Text>
+          {/* ── Tools grid ── */}
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionLabel, { color: isDark ? "rgba(255,255,255,0.4)" : colors.mutedForeground }]}>
+              TOOLS
+            </Text>
+            <View style={[styles.sectionLine, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : colors.border }]} />
+          </View>
           <View style={styles.toolsGrid}>
-            {TOOLS.map((t, i) => <ToolCard key={t.label + i} {...t} index={i} />)}
+            {TOOLS.map((t, i) => <ToolCard key={t.label} {...t} index={i} />)}
           </View>
 
-          {/* Tip */}
-          <View style={[styles.tipCard, { backgroundColor: colors.primaryMuted, borderColor: colors.primary + "25" }]}>
-            <View style={[styles.tipIcon, { backgroundColor: colors.primary + "18" }]}>
-              <Feather name="zap" size={13} color={colors.primary} />
+          {/* ── AI tip card ── */}
+          <GlassCard style={styles.tipCard}>
+            <View style={styles.tipInner}>
+              <View style={[styles.tipIcon, { backgroundColor: isDark ? "rgba(56,189,248,0.12)" : colors.primaryMuted }]}>
+                <Feather name="cpu" size={14} color={isDark ? SKY : colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.tipTitle, { color: isDark ? SKY : colors.primary }]}>Griha AI</Text>
+                <Text style={[styles.tipText, { color: isDark ? "rgba(255,255,255,0.6)" : colors.mutedForeground }]}>
+                  Open the Designer and tap <Text style={{ fontWeight: "700", color: isDark ? SKY : colors.primary }}>AI</Text> in the bottom bar to chat with your Vastu consultant.
+                </Text>
+              </View>
             </View>
-            <Text style={[styles.tipText, { color: colors.primary }]}>
-              Tap <Text style={{ fontWeight: "800" }}>Design</Text> in the nav bar to open the canvas. Switch between Rooms and Sketch mode inside.
-            </Text>
-          </View>
+          </GlassCard>
         </Animated.View>
       </ScrollView>
     </View>
@@ -195,37 +247,75 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  heroGradient: { paddingBottom: 36, overflow: "hidden" },
-  decCircle1: { position: "absolute", width: SW * 0.9, height: SW * 0.9, borderRadius: SW * 0.45, top: -SW * 0.35, right: -SW * 0.25 },
-  decCircle2: { position: "absolute", width: SW * 0.6, height: SW * 0.6, borderRadius: SW * 0.3, bottom: -SW * 0.1, left: -SW * 0.15 },
-  heroContent: { alignItems: "center", paddingTop: 28, paddingHorizontal: 24, gap: 10 },
-  logoMark: { width: 72, height: 72, borderRadius: 22, alignItems: "center", justifyContent: "center", marginBottom: 4, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8 },
-  heroTitle: { fontSize: 40, fontWeight: "800", letterSpacing: -1.5, lineHeight: 46 },
-  heroTagline: { fontSize: 16, textAlign: "center", lineHeight: 23, letterSpacing: -0.2 },
-  savedBadge: { flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, marginTop: 4 },
-  savedBadgeText: { fontSize: 13, fontWeight: "600" },
 
-  body: { paddingHorizontal: 16, paddingTop: 20, gap: 12 },
+  // Ambient glow blobs
+  glowTopRight: {
+    position: "absolute", top: -80, right: -80,
+    width: SW * 0.7, height: SW * 0.7,
+    borderRadius: SW * 0.35,
+    backgroundColor: "#38BDF8",
+    opacity: 0.05,
+  },
+  glowBottomLeft: {
+    position: "absolute", bottom: -80, left: -80,
+    width: SW * 0.6, height: SW * 0.6,
+    borderRadius: SW * 0.3,
+    backgroundColor: "#818CF8",
+    opacity: 0.05,
+  },
 
-  ctaPrimary: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, paddingVertical: 16, borderRadius: 16, shadowColor: "#8B5E3C", shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.28, shadowRadius: 16, elevation: 6 },
-  ctaPrimaryText: { color: "#fff", fontSize: 16, fontWeight: "800", letterSpacing: -0.3 },
-  ctaSecondary: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, paddingVertical: 14, borderRadius: 16, borderWidth: 1.5 },
-  ctaSecondaryText: { fontSize: 15, fontWeight: "700" },
+  header: {
+    flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between",
+    paddingHorizontal: 24, paddingBottom: 8,
+  },
+  appLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 0.8 },
+  appName: { fontSize: 32, fontWeight: "800", letterSpacing: -1, lineHeight: 36 },
+  badge: {
+    flexDirection: "row", alignItems: "center", gap: 5,
+    paddingHorizontal: 10, paddingVertical: 5,
+    borderRadius: 20, borderWidth: 1,
+  },
+  badgeText: { fontSize: 12, fontWeight: "600" },
 
-  statsStrip: { flexDirection: "row", borderRadius: 18, borderWidth: StyleSheet.hairlineWidth, overflow: "hidden" },
-  statItem: { flex: 1, alignItems: "center", paddingVertical: 16, gap: 3 },
-  statValue: { fontSize: 22, fontWeight: "800", letterSpacing: -0.5 },
-  statLabel: { fontSize: 11, fontWeight: "500" },
-  statDivider: { width: StyleSheet.hairlineWidth, marginVertical: 14 },
+  body: { paddingHorizontal: 16, paddingTop: 12, gap: 12 },
 
-  sectionLabel: { fontSize: 17, fontWeight: "800", letterSpacing: -0.4 },
+  heroCard: { padding: 20 },
+  heroCardInner: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 },
+  metricLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 0.8, marginBottom: 4 },
+  metricValue: { fontSize: 40, fontWeight: "800", letterSpacing: -2, lineHeight: 44 },
+  metricUnit: { fontSize: 20, fontWeight: "600" },
+  ctaBtn: {
+    flexDirection: "row", alignItems: "center", gap: 7,
+    paddingHorizontal: 16, paddingVertical: 12, borderRadius: 14,
+    shadowColor: "#38BDF8", shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 12, elevation: 6,
+  },
+  ctaBtnText: { fontSize: 14, fontWeight: "800", letterSpacing: -0.2 },
+  graphRow: { flexDirection: "row", alignItems: "flex-end", gap: 4, height: 32 },
+  graphBar: { flex: 1, borderRadius: 3, minHeight: 4 },
+
+  statsRow: { flexDirection: "row", gap: 10 },
+  statCard: { flex: 1, padding: 14, alignItems: "center", gap: 3 },
+  statValue: { fontSize: 24, fontWeight: "800", letterSpacing: -0.8 },
+  statLabel: { fontSize: 10, fontWeight: "600", letterSpacing: 0.3 },
+
+  sectionHeader: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 4 },
+  sectionLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 0.8 },
+  sectionLine: { flex: 1, height: StyleSheet.hairlineWidth },
+
   toolsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  toolCard: { padding: 16, borderRadius: 18, borderWidth: 1, gap: 8 },
-  toolIcon: { width: 38, height: 38, borderRadius: 11, alignItems: "center", justifyContent: "center" },
-  toolLabel: { fontSize: 14, fontWeight: "700", letterSpacing: -0.2 },
-  toolDesc: { fontSize: 12, lineHeight: 17 },
+  toolCard: {
+    padding: 14, borderRadius: 18, borderWidth: 1, gap: 7,
+    overflow: "hidden",
+  },
+  toolAccent: { position: "absolute", left: 0, top: 12, bottom: 12, width: 2, borderRadius: 1 },
+  toolIcon: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  toolLabel: { fontSize: 13, fontWeight: "700", letterSpacing: -0.2, paddingLeft: 6 },
+  toolDesc: { fontSize: 11, lineHeight: 16, paddingLeft: 6 },
 
-  tipCard: { flexDirection: "row", alignItems: "flex-start", gap: 10, padding: 14, borderRadius: 14, borderWidth: 1 },
-  tipIcon: { width: 26, height: 26, borderRadius: 8, alignItems: "center", justifyContent: "center", marginTop: 1 },
-  tipText: { flex: 1, fontSize: 13, lineHeight: 19 },
+  tipCard: { padding: 14 },
+  tipInner: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
+  tipIcon: { width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center", marginTop: 1 },
+  tipTitle: { fontSize: 12, fontWeight: "800", letterSpacing: 0.2, marginBottom: 3 },
+  tipText: { fontSize: 13, lineHeight: 18 },
 });

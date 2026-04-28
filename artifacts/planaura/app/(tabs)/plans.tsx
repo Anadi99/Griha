@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
   newBtn: {
     flexDirection: "row", alignItems: "center", gap: 6,
     paddingHorizontal: 16, paddingVertical: 13, borderRadius: 16,
-    shadowColor: "#8B5E3C", shadowOffset: { width: 0, height: 3 },
+    shadowColor: "#38BDF8", shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25, shadowRadius: 8, elevation: 4,
   },
   newBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" },
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
   emptyBtn: {
     flexDirection: "row", alignItems: "center", gap: 8,
     paddingHorizontal: 28, paddingVertical: 15, borderRadius: 16, marginTop: 4,
-    shadowColor: "#8B5E3C", shadowOffset: { width: 0, height: 4 },
+    shadowColor: "#38BDF8", shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.28, shadowRadius: 10, elevation: 5,
   },
   emptyBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
