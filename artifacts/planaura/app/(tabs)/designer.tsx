@@ -336,7 +336,7 @@ export default function DesignerScreen() {
       {/* ── Bottom bar ── */}
       {isIOS ? (
         <BlurView intensity={80} tint={isDark ? "dark" : "extraLight"}
-          style={[styles.bottomBar, { borderTopColor: colors.border, paddingBottom: botPad + 2 }]}>
+          style={[styles.bottomBar, { borderTopColor: colors.border, paddingBottom: botPad + 90 }]}>
           <BottomBarContent showPanel={showPanel} panelTab={panelTab} hasSelection={hasSelection}
             colors={colors} openPanelOnTab={openPanelOnTab}
             designerMode={designerMode} setDesignerMode={(m: DesignerMode) => {
@@ -347,7 +347,7 @@ export default function DesignerScreen() {
             }} />
         </BlurView>
       ) : (
-        <View style={[styles.bottomBar, { backgroundColor: colors.card, borderTopColor: colors.border, paddingBottom: botPad + 2 }]}>
+        <View style={[styles.bottomBar, { backgroundColor: colors.card, borderTopColor: colors.border, paddingBottom: botPad + 72 }]}>
           <BottomBarContent showPanel={showPanel} panelTab={panelTab} hasSelection={hasSelection}
             colors={colors} openPanelOnTab={openPanelOnTab}
             designerMode={designerMode} setDesignerMode={(m: DesignerMode) => {
@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
   barBtnText: { fontSize: 10, fontWeight: "600" },
 
   panel: {
-    position: "absolute", bottom: 0, left: 0, right: 0,
+    position: "absolute", bottom: Platform.OS === "ios" ? 84 : 68, left: 0, right: 0,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
     maxHeight: PANEL_HEIGHT, zIndex: 20,

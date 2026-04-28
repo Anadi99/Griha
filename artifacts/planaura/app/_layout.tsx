@@ -15,6 +15,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ToastProvider } from "@/components/Toast";
+import { FloatingAI } from "@/components/FloatingAI";
 import { ONBOARDING_KEY } from "./onboarding";
 
 SplashScreen.preventAutoHideAsync();
@@ -74,6 +75,7 @@ export default function RootLayout() {
           <KeyboardProvider>
             <ToastProvider>
               <RootLayoutNav onboarded={onboarded} />
+              <FloatingAI />
             </ToastProvider>
           </KeyboardProvider>
         </GestureHandlerRootView>
