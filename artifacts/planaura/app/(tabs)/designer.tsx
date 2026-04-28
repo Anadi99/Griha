@@ -43,13 +43,34 @@ function TBtn({ icon, active, danger, disabled, onPress, color }: {
   onPress: () => void; color?: string;
 }) {
   const colors = useColors();
-  const bg = active ? (color ?? colors.primary) : "transparent";
-  const iconColor = active ? "#fff" : danger ? colors.destructive : disabled ? colors.muted : colors.foreground;
+  const isDark = useColorScheme() === "dark";
+  const activeColor = color ?? (isDark ? "#38BDF8" : colors.primary);
+  const bg = active ? (isDark ? "rgba(56,189,248,0.15)" : activeColor + "18") : "transparent";
+  const iconColor = active
+    ? activeColor
+    : danger ? colors.destructive
+    : disabled ? colors.muted
+    : isDark ? "rgba(255,255,255,0.55)" : colors.foreground;
+
   return (
     <ScalePress onPress={disabled ? undefined : onPress}
-      style={[styles.tBtn, { backgroundColor: bg }]}
+      style={[
+        styles.tBtn,
+        { backgroundColor: bg },
+        active && isDark && {
+          shadowColor: activeColor,
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.6,
+          shadowRadius: 6,
+          elevation: 4,
+        },
+      ]}
       scale={0.88} disabled={disabled}>
-      <Feather name={icon as any} size={17} color={iconColor} style={{ opacity: disabled ? 0.3 : 1 }} />
+      <Feather
+        name={icon as any} size={17}
+        color={iconColor}
+        style={{ opacity: disabled ? 0.3 : 1 }}
+      />
     </ScalePress>
   );
 }
