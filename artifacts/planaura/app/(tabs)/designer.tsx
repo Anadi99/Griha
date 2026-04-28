@@ -15,12 +15,13 @@ import { SketchCanvas } from "@/components/SketchCanvas";
 import { RoomPropertiesPanel } from "@/components/RoomPropertiesPanel";
 import { VastuPanel } from "@/components/VastuPanel";
 import { CostPanel } from "@/components/CostPanel";
+import { VastuAIChat } from "@/components/VastuAIChat";
 import { ExportButton } from "@/components/ExportButton";
 import { analyzeVastu } from "@/lib/vastu-engine";
 import { ScalePress } from "@/components/ScalePress";
 import { useToast } from "@/components/Toast";
 
-type PanelTab = "properties" | "vastu" | "cost";
+type PanelTab = "properties" | "vastu" | "cost" | "ai";
 type DesignerMode = "rooms" | "sketch";
 const PANEL_HEIGHT = 420;
 
@@ -369,6 +370,13 @@ export default function DesignerScreen() {
                 style={[styles.pTab, panelTab === "cost" && [styles.pTabActive, { borderBottomColor: colors.primary }]]}>
                 <Text style={[styles.pTabText, { color: panelTab === "cost" ? colors.primary : colors.mutedForeground }]}>Cost</Text>
               </ScalePress>
+              <ScalePress onPress={() => setPanelTab("ai")} scale={0.96}
+                style={[styles.pTab, panelTab === "ai" && [styles.pTabActive, { borderBottomColor: colors.primary }]]}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <Feather name="cpu" size={11} color={panelTab === "ai" ? colors.primary : colors.mutedForeground} />
+                  <Text style={[styles.pTabText, { color: panelTab === "ai" ? colors.primary : colors.mutedForeground }]}>AI</Text>
+                </View>
+              </ScalePress>
               <ScalePress onPress={closePanel} style={styles.pClose} scale={0.9}>
                 <Feather name="chevron-down" size={18} color={colors.muted} />
               </ScalePress>
@@ -377,6 +385,7 @@ export default function DesignerScreen() {
               {panelTab === "properties" && <RoomPropertiesPanel onClose={closePanel} />}
               {panelTab === "vastu" && <VastuPanel />}
               {panelTab === "cost" && <CostPanel />}
+              {panelTab === "ai" && <VastuAIChat />}
             </View>
           </View>
         </Animated.View>
@@ -531,6 +540,11 @@ function BottomBarContent({ showPanel, panelTab, hasSelection, colors, openPanel
             style={[styles.barBtn, costActive && { backgroundColor: colors.primaryMuted }]} scale={0.93}>
             <Feather name="trending-up" size={18} color={costActive ? colors.primary : colors.mutedForeground} />
             <Text style={[styles.barBtnText, { color: costActive ? colors.primary : colors.mutedForeground }]}>Cost</Text>
+          </ScalePress>
+          <ScalePress onPress={() => openPanelOnTab("ai")}
+            style={[styles.barBtn, (panelTab === "ai" && showPanel) && { backgroundColor: colors.primaryMuted }]} scale={0.93}>
+            <Feather name="cpu" size={18} color={(panelTab === "ai" && showPanel) ? colors.primary : colors.mutedForeground} />
+            <Text style={[styles.barBtnText, { color: (panelTab === "ai" && showPanel) ? colors.primary : colors.mutedForeground }]}>AI</Text>
           </ScalePress>
           {hasSelection && (
             <ScalePress onPress={() => openPanelOnTab("properties")}

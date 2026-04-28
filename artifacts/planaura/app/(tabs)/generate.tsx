@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { View, Text, StyleSheet, ScrollView, Platform, Animated, TextInput, useColorScheme } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Platform, Animated, TextInput, useColorScheme, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -11,6 +11,7 @@ import { useDesignerStore, Room } from "@/lib/store";
 import { ScalePress } from "@/components/ScalePress";
 import { generateLayouts, GeneratorInput, GeneratedLayout } from "@/lib/layout-generator";
 import { useToast } from "@/components/Toast";
+import { generateLayoutWithAI, LayoutRequirements } from "@/lib/ai-service";
 
 const ROOM_TYPES: Array<{ type: Room["type"]; label: string; color: string }> = [
   { type:"bedroom",     label:"Bedroom",     color:"#C084FC" },
@@ -57,6 +58,14 @@ export default function GenerateScreen() {
   const [layouts, setLayouts] = useState<GeneratedLayout[]>([]);
   const [generated, setGenerated] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  // AI state
+  const [aiMode, setAiMode] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResult, setAiResult] = useState<string | null>(null);
+  const [facing, setFacing] = useState("North");
+  const [family, setFamily] = useState("Nuclear family (4 members)");
+  const [budget, setBudget] = useState("₹50L–1Cr");
+  const [preferences, setPreferences] = useState("");
 
   const handleGenerate = () => {
     const pw=parseInt(plotW)||20, ph=parseInt(plotH)||15;
@@ -66,6 +75,33 @@ export default function GenerateScreen() {
     fadeAnim.setValue(0);
     Animated.spring(fadeAnim,{toValue:1,tension:80,friction:10,useNativeDriver:true}).start();
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
+
+  const handleAIGenerate = async () => {
+    setAiLoading(true); setAiResult(null);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      const roomList = Object.entries(roomCounts)
+        .filter(([,c]) => c > 0)
+        .map(([type, count]) => `${count} ${type.replace("_"," ")}`)
+        .join(", ");
+      const result = await generateLayoutWithAI({
+        plotWidth: parseInt(plotW) || 20,
+        plotHeight: parseInt(plotH) || 15,
+        facing,
+        rooms: roomList,
+        family,
+        budget,
+        preferences,
+        city: store.currentPlan?.locationCity ?? "Mumbai",
+      });
+      setAiResult(result);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch {
+      toast.show("AI unavailable. Check your API key.", "error");
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const handleLoad = (layout: GeneratedLayout) => {
@@ -114,13 +150,65 @@ export default function GenerateScreen() {
             </View>
           );})}
         </View>
-        <ScalePress onPress={handleGenerate} scale={0.97}>
+
+        {/* Mode toggle */}
+        <View style={[styles.modeToggle,{backgroundColor:colors.mutedBg}]}>
+          <ScalePress onPress={()=>setAiMode(false)} style={[styles.modeBtn,!aiMode&&{backgroundColor:colors.card}]} scale={0.94}>
+            <Feather name="cpu" size={13} color={!aiMode?colors.primary:colors.muted}/>
+            <Text style={[styles.modeBtnText,{color:!aiMode?colors.primary:colors.muted}]}>Rule-based</Text>
+          </ScalePress>
+          <ScalePress onPress={()=>setAiMode(true)} style={[styles.modeBtn,aiMode&&{backgroundColor:colors.card}]} scale={0.94}>
+            <Feather name="zap" size={13} color={aiMode?colors.primary:colors.muted}/>
+            <Text style={[styles.modeBtnText,{color:aiMode?colors.primary:colors.muted}]}>AI Powered</Text>
+          </ScalePress>
+        </View>
+
+        {/* AI extra inputs */}
+        {aiMode&&(
+          <View style={[styles.aiInputCard,{backgroundColor:colors.card,borderColor:colors.border}]}>
+            <Text style={[styles.aiInputTitle,{color:colors.foreground}]}>Tell AI about your needs</Text>
+            {[
+              {label:"Plot facing",value:facing,set:setFacing,placeholder:"e.g. North, East"},
+              {label:"Family type",value:family,set:setFamily,placeholder:"e.g. Joint family, 6 members"},
+              {label:"Budget",value:budget,set:setBudget,placeholder:"e.g. ₹50L–1Cr"},
+              {label:"Special needs",value:preferences,set:setPreferences,placeholder:"e.g. Pooja room, garden, garage"},
+            ].map(f=>(
+              <View key={f.label} style={styles.aiField}>
+                <Text style={[styles.aiFieldLabel,{color:colors.mutedForeground}]}>{f.label}</Text>
+                <TextInput value={f.value} onChangeText={f.set} placeholder={f.placeholder}
+                  placeholderTextColor={colors.muted}
+                  style={[styles.aiFieldInput,{color:colors.foreground,backgroundColor:colors.mutedBg,borderColor:colors.border}]}/>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Generate button */}
+        <ScalePress onPress={aiMode?handleAIGenerate:handleGenerate} scale={0.97} disabled={aiLoading}>
           <LinearGradient colors={[colors.primary,colors.primaryDark]} start={{x:0,y:0}} end={{x:1,y:1}} style={styles.generateBtn}>
-            <Feather name="cpu" size={18} color="#fff"/>
-            <Text style={styles.generateBtnText}>Generate Layouts</Text>
+            {aiLoading
+              ? <ActivityIndicator color="#fff" size="small"/>
+              : <Feather name={aiMode?"zap":"cpu"} size={18} color="#fff"/>
+            }
+            <Text style={styles.generateBtnText}>
+              {aiLoading?"Generating…":aiMode?"Generate with AI":"Generate Layouts"}
+            </Text>
           </LinearGradient>
         </ScalePress>
-        {generated&&(
+
+        {/* AI result */}
+        {aiMode&&aiResult&&(
+          <View style={[styles.aiResult,{backgroundColor:colors.card,borderColor:colors.border}]}>
+            <View style={styles.aiResultHeader}>
+              <Feather name="zap" size={14} color={colors.primary}/>
+              <Text style={[styles.aiResultTitle,{color:colors.foreground}]}>AI Layout Advice</Text>
+            </View>
+            <Text style={[styles.aiResultText,{color:colors.foreground}]}>{aiResult}</Text>
+          </View>
+        )}
+
+        {/* Rule-based results */}
+        {!aiMode&&generated&&(
           <Animated.View style={{opacity:fadeAnim,gap:12}}>
             <Text style={[styles.resultsTitle,{color:colors.foreground}]}>{layouts.length} layouts generated</Text>
             {layouts.map(layout=>(
@@ -157,4 +245,16 @@ const styles = StyleSheet.create({
   layoutCard:{borderRadius:16,borderWidth:StyleSheet.hairlineWidth,padding:16,gap:10},layoutName:{fontSize:16,fontWeight:"800",letterSpacing:-0.3},layoutDesc:{fontSize:12,lineHeight:18},layoutBadges:{flexDirection:"row",gap:8},badge:{paddingHorizontal:10,paddingVertical:4,borderRadius:8},badgeText:{fontSize:12,fontWeight:"700"},
   miniPlan:{borderRadius:10,borderWidth:StyleSheet.hairlineWidth,overflow:"hidden",position:"relative"},miniRoom:{position:"absolute",borderWidth:1,borderRadius:2},
   loadBtn:{flexDirection:"row",alignItems:"center",justifyContent:"center",gap:8,paddingVertical:13,borderRadius:14},loadBtnText:{color:"#fff",fontSize:14,fontWeight:"700"},
+  modeToggle:{flexDirection:"row",borderRadius:12,padding:3,gap:2},
+  modeBtn:{flex:1,flexDirection:"row",alignItems:"center",justifyContent:"center",gap:5,paddingVertical:9,borderRadius:10},
+  modeBtnText:{fontSize:12,fontWeight:"700"},
+  aiInputCard:{borderRadius:16,borderWidth:StyleSheet.hairlineWidth,padding:14,gap:10},
+  aiInputTitle:{fontSize:14,fontWeight:"700"},
+  aiField:{gap:5},
+  aiFieldLabel:{fontSize:11,fontWeight:"600"},
+  aiFieldInput:{borderWidth:1,borderRadius:10,paddingHorizontal:12,paddingVertical:9,fontSize:14},
+  aiResult:{borderRadius:16,borderWidth:StyleSheet.hairlineWidth,padding:16,gap:10},
+  aiResultHeader:{flexDirection:"row",alignItems:"center",gap:8},
+  aiResultTitle:{fontSize:15,fontWeight:"800"},
+  aiResultText:{fontSize:13,lineHeight:20},
 });

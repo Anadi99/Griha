@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, Platform, Animated, Image, Alert, useColorScheme } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Platform, Animated, Image, Alert, useColorScheme, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -9,6 +9,7 @@ import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
 import { ScalePress } from "@/components/ScalePress";
 import { analyzeRoomScan, getQuestions, RoomType, Direction, RoomScanInput, RoomScanResult } from "@/lib/room-scan-engine";
+import { analyzeRoomWithAI, imageUriToBase64 } from "@/lib/ai-service";
 
 const ROOM_TYPES: Array<{ type: RoomType; label: string; icon: string; color: string }> = [
   { type: "bedroom",     label: "Bedroom",     icon: "moon",      color: "#C084FC" },
@@ -84,6 +85,8 @@ export default function ScanScreen() {
   const [roomType, setRoomType] = useState<RoomType|null>(null);
   const [answers, setAnswers] = useState<Record<string,any>>({});
   const [result, setResult] = useState<RoomScanResult|null>(null);
+  const [aiResult, setAiResult] = useState<string|null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
   const stepIndex = ["photo","roomtype","questions","result"].indexOf(step);
@@ -115,7 +118,7 @@ export default function ScanScreen() {
     if (!res.canceled && res.assets[0]) { setPhotoUri(res.assets[0].uri); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); transition("roomtype"); }
   };
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!roomType) return;
     const qs = getQuestions(roomType);
     const missing = qs.filter(q => q.required && !answers[q.id]);
@@ -123,10 +126,23 @@ export default function ScanScreen() {
     const input: RoomScanInput = { roomType, facingDirection: answers.facingDirection, windowDirection: answers.windowDirection, hasAttachedBath: answers.hasAttachedBath === "true", cookingDirection: answers.cookingDirection ?? null, workDeskDirection: answers.workDeskDirection ?? null, bedHeadDirection: answers.bedHeadDirection ?? null, clutter: answers.clutter, naturalLight: answers.naturalLight, ventilation: answers.ventilation };
     setResult(analyzeRoomScan(input));
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    // Also run AI analysis if photo is available
+    if (photoUri) {
+      setAiLoading(true);
+      try {
+        const base64 = await imageUriToBase64(photoUri);
+        const ai = await analyzeRoomWithAI(base64, roomType, answers);
+        setAiResult(ai);
+      } catch {
+        setAiResult(null);
+      } finally {
+        setAiLoading(false);
+      }
+    }
     transition("result");
   };
 
-  const handleReset = () => { setPhotoUri(null); setRoomType(null); setAnswers({}); setResult(null); transition("photo"); };
+  const handleReset = () => { setPhotoUri(null); setRoomType(null); setAnswers({}); setResult(null); setAiResult(null); setAiLoading(false); transition("photo"); };
   const setAnswer = (id: string, val: any) => { setAnswers(p => ({ ...p, [id]: val })); Haptics.selectionAsync(); };
 
   return (
@@ -297,6 +313,19 @@ export default function ScanScreen() {
                 </View>
               )}
 
+              {/* AI Analysis result */}
+              {(aiLoading || aiResult) && (
+                <View style={[styles.aiCard, { backgroundColor: colors.card, borderColor: colors.primary + "30" }]}>
+                  <View style={styles.aiCardHeader}>
+                    <Feather name="zap" size={14} color={colors.primary} />
+                    <Text style={[styles.aiCardTitle, { color: colors.foreground }]}>AI Vision Analysis</Text>
+                    {aiLoading && <ActivityIndicator size="small" color={colors.primary} style={{ marginLeft: "auto" }} />}
+                  </View>
+                  {aiResult && <Text style={[styles.aiCardText, { color: colors.foreground }]}>{aiResult}</Text>}
+                  {aiLoading && <Text style={[styles.aiCardLoading, { color: colors.mutedForeground }]}>Analyzing your room photo with AI…</Text>}
+                </View>
+              )}
+
               <ScalePress onPress={handleReset} style={[styles.resetFullBtn, { backgroundColor: colors.card, borderColor: colors.border }]} scale={0.97}>
                 <Feather name="refresh-cw" size={15} color={colors.primary} />
                 <Text style={[styles.resetFullBtnText, { color: colors.primary }]}>Scan Another Room</Text>
@@ -326,4 +355,9 @@ const styles = StyleSheet.create({
   issueCard:{flexDirection:"row",alignItems:"flex-start",gap:10,padding:14,borderRadius:16,borderWidth:1},issueTitle:{fontSize:14,fontWeight:"700",marginBottom:3},issueDetail:{fontSize:12,lineHeight:18},
   posCard:{flexDirection:"row",alignItems:"flex-start",gap:10,padding:14,borderRadius:16,borderWidth:1},posTitle:{fontSize:14,fontWeight:"700",marginBottom:3},posDetail:{fontSize:12,lineHeight:18},
   resetFullBtn:{flexDirection:"row",alignItems:"center",justifyContent:"center",gap:8,paddingVertical:14,borderRadius:16,borderWidth:1.5},resetFullBtnText:{fontSize:15,fontWeight:"700"},
+  aiCard:{borderRadius:16,borderWidth:1,padding:16,gap:10},
+  aiCardHeader:{flexDirection:"row",alignItems:"center",gap:8},
+  aiCardTitle:{fontSize:15,fontWeight:"800",flex:1},
+  aiCardText:{fontSize:13,lineHeight:20},
+  aiCardLoading:{fontSize:13,fontStyle:"italic"},
 });
